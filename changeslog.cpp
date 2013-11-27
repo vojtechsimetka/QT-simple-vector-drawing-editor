@@ -78,8 +78,9 @@ void ChangesLog::undoStep()
         QLinkedListIterator<Step *> it(changes);
         while (it.next() != currentItem) { }
         currentItem = it.previous();
-
     }
+
+
 
     qDebug() << "red,curr: " << currentItem;
     qDebug() << "red,last: " <<changes.last();

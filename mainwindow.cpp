@@ -10,6 +10,9 @@
  */
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "changeslog.h"
+
+openglwidget * MainWindow::opw = NULL;
 
 /**
  * @brief MainWindow constructor
@@ -21,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // Set's up user interface from an xml file
     ui->setupUi(this);
+
+    MainWindow::opw = ui->widget;
 }
 
 /**
@@ -30,4 +35,10 @@ MainWindow::~MainWindow()
 {
     // Deletes user interface
     delete ui;
+}
+
+void MainWindow::undo()
+{
+    // Redo
+    ChangesLog::sharedInstance()->undoStep();
 }

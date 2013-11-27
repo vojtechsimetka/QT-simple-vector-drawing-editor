@@ -30,8 +30,6 @@ void Data::paintAll()
 
 void Data::add(Element * e)
 {
-    ChangesLog::sharedInstance()->undoStep();
-    ChangesLog::sharedInstance()->undoStep();
     this->elements.append(e);
     ChangesLog::sharedInstance()->doStep(ADD,0,0,e);
 }
