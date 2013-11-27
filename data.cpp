@@ -12,6 +12,11 @@ void Data::createLine(float x1, float y1, float x2, float y2)
     this->elements.append(new Line(x1, y1, x2, y2));
 }
 
+void Data::createRectangle(float x1, float y1, float x2, float y2)
+{
+    this->elements.append(new Rectangle(x1, y1, x2, y2));
+}
+
 void Data::paintAll()
 {
     foreach (Element* e, this->elements)

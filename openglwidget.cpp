@@ -20,7 +20,7 @@ openglwidget::openglwidget(QWidget *parent):
 {
     // Initializes status
     // TODO: Change to select when ready
-    this->status = DRAWLINE;
+    this->status = DRAWRECTANGLE;
 
     // Creates data set
     this->data = new Data();
@@ -99,6 +99,10 @@ void openglwidget::mousePressEvent(QMouseEvent *event)
         case DRAWLINE:
             // Create new line
             e = new Line(event->x(),event->y(),event->x(),event->y());
+            break;
+        case DRAWRECTANGLE:
+            // Create new rectangle
+            e = new Rectangle(event->x(),event->y(),event->x(),event->y());
             break;
 
         default:

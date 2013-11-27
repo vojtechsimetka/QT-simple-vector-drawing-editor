@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     line.cpp \
     point.cpp \
     data.cpp \
-    metaelement.cpp
+    metaelement.cpp \
+    rectangle.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -27,7 +28,8 @@ HEADERS  += mainwindow.h \
     line.h \
     point.h \
     data.h \
-    metaelement.h
+    metaelement.h \
+    rectangle.h
 
 FORMS    += mainwindow.ui
 

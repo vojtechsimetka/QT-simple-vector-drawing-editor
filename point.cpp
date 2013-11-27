@@ -36,7 +36,7 @@ float Point::getX() const
  */
 void Point::setX(float x)
 {
-    x = x;
+    this->x = x;
 }
 
 /**
@@ -54,7 +54,7 @@ float Point::getY() const
  */
 void Point::setY(float y)
 {
-    y = y;
+    this->y = y;
 }
 
 /**

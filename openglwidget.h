@@ -23,6 +23,7 @@ class Data;
 enum Status
 {
     DRAWLINE,
+    DRAWRECTANGLE,
     DRAWCIRCLE
 };
 

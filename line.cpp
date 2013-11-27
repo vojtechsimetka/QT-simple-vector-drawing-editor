@@ -44,6 +44,13 @@ void Line::HighlightMe()
     ;
 }
 
+/**
+ * @brief Resize line
+ * @param x1 First point's coordinate x
+ * @param y1 First point's coordinate y
+ * @param x2 Second point's coordinate x
+ * @param y2 Second point's coordinate y
+ */
 void Line::resize(float x1, float y1, float x2, float y2)
 {
     this->p1.setX(x1);
