@@ -10,16 +10,9 @@ enum Actions {
     MOVE
 };
 
-// Objects acting in changes
-enum Elements {
-    LINE,
-    RECTANGLE
-};
-
 // One step possible to do in app
 struct Step {
     Actions action;
-    Elements element;
     int offsetX;
     int offsetY;
     void *object;
@@ -32,28 +25,18 @@ private:
     static ChangesLog *changesLogInstance;
     ChangesLog();
 
-    // Connection to data
-    Data data;
-    // Array of changes
-    Step undoList[10];
-    // One step behind last item
-    int positionInUndoList;
-    //Count items of changes
-    int itemsInUndoArray;
+    // List of changes
+    QLinkedList<Step*> changes;
+    Step *currentItem;
 
-    // Array of undo changes
-    Step redoList[10];
-    // One step behind last item
-    int positionInRedoList;
-    // Count items of undos
-    int itemsInRedoArray;
+    // Connection to data
+    Data *data;
 
 public:
     static ChangesLog *sharedInstance();
-
-
-
-    void init(Data d);
+    void init(Data *d);
+    void doStep(Actions a, int offsetX, int offsetY, void *object);
+    void undoStep();
 };
 
 #endif // CHANGESLOG_H

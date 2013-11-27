@@ -13,6 +13,7 @@ public:
     void createRectangle(float, float, float, float);
     void paintAll();
     void add(Element *e);
+    void remove(Element *e);
 
 private:
     QLinkedList<Element*> elements;
