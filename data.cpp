@@ -1,4 +1,5 @@
 #include "data.h"
+#include "changeslog.h"
 #include <QDebug>
 
 Data::Data()
@@ -10,6 +11,7 @@ Data::Data()
 void Data::createLine(float x1, float y1, float x2, float y2)
 {
     this->elements.append(new Line(x1, y1, x2, y2));
+    ChangesLog::sharedInstance();
 }
 
 void Data::createRectangle(float x1, float y1, float x2, float y2)

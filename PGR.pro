@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     point.cpp \
     data.cpp \
     metaelement.cpp \
-    rectangle.cpp
+    rectangle.cpp \
+    changeslog.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -29,7 +30,8 @@ HEADERS  += mainwindow.h \
     point.h \
     data.h \
     metaelement.h \
-    rectangle.h
+    rectangle.h \
+    changeslog.h
 
 FORMS    += mainwindow.ui
 
