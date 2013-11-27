@@ -42,8 +42,8 @@ void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
     changes.append(s);
     currentItem = s;
 
-    qDebug() << "add,curr: " << currentItem;
-    qDebug() << "add,last: " <<changes.last();
+//    qDebug() << "add,curr: " << currentItem;
+//    qDebug() << "add,last: " <<changes.last();
 }
 
 /**
@@ -83,6 +83,12 @@ void ChangesLog::undoStep()
 
 
     MainWindow::opw->repaint();
-    qDebug() << "red,curr: " << currentItem;
-    qDebug() << "red,last: " <<changes.last();
+//    qDebug() << "red,curr: " << currentItem;
+//    qDebug() << "red,last: " <<changes.last();
+}
+
+
+void ChangesLog::redoStep()
+{
+    qDebug() << "redo";
 }

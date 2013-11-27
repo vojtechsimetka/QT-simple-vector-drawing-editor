@@ -19,8 +19,7 @@ openglwidget::openglwidget(QWidget *parent):
     QGLWidget(parent)
 {
     // Initializes status
-    // TODO: Change to select when ready
-    this->status = DRAWLINE;
+    this->status = select_e;
 
     // Creates data set
     this->data = new Data();
@@ -96,11 +95,11 @@ void openglwidget::mousePressEvent(QMouseEvent *event)
         // Determine what to do
         switch (this->status)
         {
-        case DRAWLINE:
+        case drawline:
             // Create new line
             e = new Line(event->x(),event->y(),event->x(),event->y());
             break;
-        case DRAWRECTANGLE:
+        case drawrectangle:
             // Create new rectangle
             e = new Rectangle(event->x(),event->y(),event->x(),event->y());
             break;
@@ -116,14 +115,27 @@ void openglwidget::mousePressEvent(QMouseEvent *event)
 
     else
     {
-        // Resize element that is being modified
-        this->metaElement.resizeTo(event->x(),event->y());
+        switch (this->status)
+        {
+        case select_e:
+            break;
+        case drawline:
+        case drawrectangle:
+        case drawcircle:
+            // Resize element that is being modified
+            this->metaElement.resizeTo(event->x(),event->y());
 
-        // Add element to data structure
-        this->data->add(metaElement.getElement());
+            // Add element to data structure
+            this->data->add(metaElement.getElement());
 
-        // Clear information in metaelement
-        this->metaElement.clear();
+            // Clear information in metaelement
+            this->metaElement.clear();
+            break;
+        default:
+            break;
+
+        }
+
     }
 
     // Repaint scene
@@ -142,4 +154,9 @@ void openglwidget::mouseMoveEvent(QMouseEvent *event)
 
     // Repaint scene
     this->repaint();
+}
+
+void openglwidget::setAction(Status s)
+{
+    this->status = s;
 }

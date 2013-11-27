@@ -20,12 +20,13 @@
 class Data;
 
 // Drawer state enumerator
-enum Status
+typedef enum
 {
-    DRAWLINE,
-    DRAWRECTANGLE,
-    DRAWCIRCLE
-};
+    drawline,
+    drawrectangle,
+    drawcircle,
+    select_e
+} Status;
 
 class openglwidget : public QGLWidget
 {
@@ -34,6 +35,7 @@ public:
     ~openglwidget();
     void initializeGL();
     void paintGL();
+    void setAction(Status s);
 
 private:
     Data *data;

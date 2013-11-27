@@ -72,7 +72,13 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionSelect"/>
+   <addaction name="actionRotate"/>
+   <addaction name="separator"/>
    <addaction name="actionUndo"/>
+   <addaction name="actionRedo"/>
+   <addaction name="separator"/>
+   <addaction name="actionLine"/>
   </widget>
   <action name="actionUndo">
    <property name="icon">
@@ -84,6 +90,26 @@
    </property>
    <property name="toolTip">
     <string>undo</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="text">
+    <string>Redo</string>
+   </property>
+  </action>
+  <action name="actionSelect">
+   <property name="text">
+    <string>Select</string>
+   </property>
+  </action>
+  <action name="actionRotate">
+   <property name="text">
+    <string>Rotate</string>
+   </property>
+  </action>
+  <action name="actionLine">
+   <property name="text">
+    <string>Line</string>
    </property>
   </action>
  </widget>
@@ -105,8 +131,8 @@
    <slot>undo()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>59</x>
-     <y>33</y>
+     <x>249</x>
+     <y>249</y>
     </hint>
     <hint type="destinationlabel">
      <x>8</x>
@@ -114,8 +140,76 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionRedo</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>redo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>78</x>
+     <y>39</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>88</x>
+     <y>128</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSelect</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>select()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>249</x>
+     <y>249</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRotate</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>rotate()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>249</x>
+     <y>249</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionLine</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>drawLine()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>249</x>
+     <y>249</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>undo()</slot>
+  <slot>redo()</slot>
+  <slot>select()</slot>
+  <slot>rotate()</slot>
+  <slot>drawLine()</slot>
  </slots>
 </ui>

@@ -37,6 +37,7 @@ public:
     void init(Data *d);
     void doStep(Actions a, int offsetX, int offsetY, void *object);
     void undoStep();
+    void redoStep();
 };
 
 #endif // CHANGESLOG_H

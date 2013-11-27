@@ -25,6 +25,10 @@ class MainWindow : public QMainWindow
 
 public slots:
     void undo();
+    void redo();
+    void select();
+    void rotate();
+    void drawLine();
 
 public:
     explicit MainWindow(QWidget *parent = 0);

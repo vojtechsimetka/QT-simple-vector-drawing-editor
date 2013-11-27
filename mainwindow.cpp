@@ -11,6 +11,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "changeslog.h"
+#include "openglwidget.h"
 
 openglwidget * MainWindow::opw = NULL;
 
@@ -39,6 +40,26 @@ MainWindow::~MainWindow()
 
 void MainWindow::undo()
 {
-    // Redo
+    // Undo
     ChangesLog::sharedInstance()->undoStep();
+}
+void MainWindow::redo()
+{
+    // Redo
+    ChangesLog::sharedInstance()->redoStep();
+}
+
+void MainWindow::select()
+{
+    this->ui->widget->setAction(select_e);
+}
+
+void MainWindow::rotate()
+{
+    qDebug() << "Zvolil jsem rotate";
+}
+
+void MainWindow::drawLine()
+{
+    this->ui->widget->setAction(drawline);
 }
