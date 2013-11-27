@@ -1,4 +1,5 @@
 #include "changeslog.h"
+#include "mainwindow.h"
 
 ChangesLog *ChangesLog::changesLogInstance = new ChangesLog();
 
@@ -81,7 +82,7 @@ void ChangesLog::undoStep()
     }
 
 
-
+    MainWindow::opw->repaint();
     qDebug() << "red,curr: " << currentItem;
     qDebug() << "red,last: " <<changes.last();
 }
