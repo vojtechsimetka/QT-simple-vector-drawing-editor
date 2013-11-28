@@ -55,7 +55,10 @@ void MetaElement::init(Element *element, float x, float y)
 void MetaElement::paintMe()
 {
     if (this->element != NULL)
+    {
         this->element->PaintMe();
+        this->element->PaintPoints();
+    }
 }
 
 /**

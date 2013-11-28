@@ -390,11 +390,11 @@ bool openglwidget::pointIsCloseToAnother(float *x, float *y)
 void openglwidget::paintDottedLines()
 {
     // Nothing to paint
-    if (((this->verticalDottedLine->getP1().getX() == this->verticalDottedLine->getP2().getX())
-        && (this->verticalDottedLine->getP1().getY() == this->verticalDottedLine->getP2().getY()))
+    if (((this->verticalDottedLine->getP1().getX() - this->verticalDottedLine->getP2().getX()) < 0.01)
+        && ((this->verticalDottedLine->getP1().getY() - this->verticalDottedLine->getP2().getY()) < 0.01)
         &&
-       ((this->horizonalDottedLine->getP1().getX() == this->horizonalDottedLine->getP2().getX())
-        && (this->horizonalDottedLine->getP1().getY() == this->horizonalDottedLine->getP2().getY())))
+        ((this->horizonalDottedLine->getP1().getX() - this->horizonalDottedLine->getP2().getX()) < 0.01)
+        && ((this->horizonalDottedLine->getP1().getY() - this->horizonalDottedLine->getP2().getY()) < 0.01))
         return;
 
     // get first line's coordinates

@@ -49,6 +49,14 @@ void Rectangle::PaintMe() const
     glEnd();
 }
 
+void Rectangle::PaintPoints() const
+{
+    Point::paintPoint(this->p1);
+    Point::paintPoint(this->p2);
+    Point::paintPoint(this->p1.getX(), this->p2.getY());
+    Point::paintPoint(this->p2.getX(), this->p1.getY());
+}
+
 /**
  * @brief Resize rectangle
  * @param x1 First point's coordinate x

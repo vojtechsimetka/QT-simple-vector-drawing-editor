@@ -20,6 +20,8 @@ public:
     float getY() const;
     void setY(float y);
     void setLocation(float x, float y);
+    static void paintPoint(Point p);
+    static void paintPoint(float x, float y);
 
 private:
     float x;

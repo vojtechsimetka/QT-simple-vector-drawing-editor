@@ -9,6 +9,7 @@
  * @file    point.cpp
  */
 #include "point.h"
+#include "openglwidget.h"
 
 /**
  * @brief Point constructor
@@ -66,6 +67,25 @@ void Point::setLocation(float x, float y)
 {
     this->x = x;
     this->y = y;
+}
+
+void Point::paintPoint(Point p)
+{
+    Point::paintPoint(p.getX(), p.getY());
+}
+
+void Point::paintPoint(float x, float y)
+{
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glPointSize(5);
+    glColor4f(0.5, 0.75, 0.95, 0.5);
+    glBegin(GL_POINTS);
+    glVertex2f(x, y);
+    glEnd();
+
+    glDisable(GL_BLEND);
 }
 
 
