@@ -4,10 +4,10 @@
 
 Data::Data()
 {
+    ChangesLog::sharedInstance()->init(this);
     this->createLine(80, 100, 300, 300);
     this->createLine(100, 100, 300, 300);
     this->createLine(200, 150, 500, 600);
-    ChangesLog::sharedInstance()->init(this);
 }
 
 void Data::createLine(float x1, float y1, float x2, float y2)
@@ -37,4 +37,5 @@ void Data::add(Element * e)
 void Data::remove(Element *e)
 {
     this->elements.removeOne(e);
+    ChangesLog::sharedInstance()->doStep(DELETE,0,0,e);
 }

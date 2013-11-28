@@ -51,7 +51,7 @@ void MainWindow::redo()
 
 void MainWindow::select()
 {
-    this->ui->widget->setAction(select_e);
+    this->ui->widget->setAction(SELECT_E);
 }
 
 void MainWindow::rotate()
@@ -61,5 +61,5 @@ void MainWindow::rotate()
 
 void MainWindow::drawLine()
 {
-    this->ui->widget->setAction(drawline);
+    this->ui->widget->setAction(DRAWLINE);
 }

@@ -26,8 +26,9 @@ private:
     ChangesLog();
 
     // List of changes
-    QLinkedList<Step*> changes;
-    Step *currentItem;
+    std::vector<Step *> changes;
+    // Pointer behind last change in changes
+    int lastChange;
 
     // Connection to data
     Data *data;

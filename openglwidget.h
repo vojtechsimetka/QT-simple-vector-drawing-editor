@@ -11,6 +11,8 @@
 #ifndef OPENGLWIDGET_H
 #define OPENGLWIDGET_H
 
+#define MINDISTANCE 8
+
 #include <QGLWidget>
 #include <QtOpenGL>
 #include "data.h"
@@ -22,10 +24,10 @@ class Data;
 // Drawer state enumerator
 typedef enum
 {
-    drawline,
-    drawrectangle,
-    drawcircle,
-    select_e
+    DRAWLINE,
+    DRAWRECTANGLE,
+    DRAWCIRCLE,
+    SELECT_E
 } Status;
 
 class openglwidget : public QGLWidget
@@ -44,8 +46,11 @@ private:
 
 protected:
     void resizeGL(int w, int h);
-    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    bool isHorizontal(float y1, float y2);
+    bool isVertical(float x1, float x2);
+    bool isParallelToAnotherLine(float x1, float x2, float y1, float y2);
 
 };
 

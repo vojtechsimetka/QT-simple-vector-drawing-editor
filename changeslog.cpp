@@ -15,7 +15,8 @@ ChangesLog *ChangesLog::sharedInstance()
 
 void ChangesLog::init(Data *d)
 {
-    changesLogInstance->data = d;
+    data = d;
+    lastChange = 0;
 }
 
 /**
@@ -27,9 +28,18 @@ void ChangesLog::init(Data *d)
  */
 void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
 {
-    // Remove all possible action for REDO
-    while ((!changes.isEmpty()) && (!changes.endsWith(currentItem)))
-        changes.removeLast();
+    // Check if do is redo step
+    if ((int)changes.size() != lastChange)
+    {
+        Step *s = (Step *)changes.at(lastChange);
+        // Return, step is in the list
+        if (s->object == object)
+            return;
+    }
+
+    // Remove all possible redo
+    while ((int)changes.size() != lastChange)
+        changes.pop_back();
 
     // Create new step
     Step *s = new Step();
@@ -39,11 +49,9 @@ void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
     s->object = object;
 
     // Add step to list of changes
-    changes.append(s);
-    currentItem = s;
-
-//    qDebug() << "add,curr: " << currentItem;
-//    qDebug() << "add,last: " <<changes.last();
+    changes.push_back(s);
+    lastChange++;
+    qDebug() << changes.size() << ":" << lastChange;
 }
 
 /**
@@ -51,44 +59,56 @@ void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
  */
 void ChangesLog::undoStep()
 {
-    // Nothing for undo
-    if (changes.isEmpty() || currentItem == NULL)
+    // Nothing to undo
+    if (changes.empty() || lastChange == 0)
         return;
 
+    // Point to last change
+    lastChange--;
+
     // Undo action
-    switch (currentItem->action)
+    Step *s = (Step *)changes.at(lastChange);
+    switch (s->action)
     {
     case ADD:
-        data->remove((Element *)currentItem->object);
-        // TODO: Delete? Element has no virtual destructor..
+        data->remove((Element*)s->object);
         break;
     case DELETE:
-        data->add((Element *)currentItem->object);
+        data->add((Element*)s->object);
         break;
     default:
         break;
     }
 
-    // Update changes list
-    if (currentItem == changes.first())
-    {
-        currentItem = NULL;
-    }
-    else
-    {
-        QLinkedListIterator<Step *> it(changes);
-        while (it.next() != currentItem) { }
-        currentItem = it.previous();
-    }
-
-
+    // Repaint glWindow
     MainWindow::opw->repaint();
-//    qDebug() << "red,curr: " << currentItem;
-//    qDebug() << "red,last: " <<changes.last();
 }
 
-
+/**
+ * @brief Redo step
+ */
 void ChangesLog::redoStep()
 {
-    qDebug() << "redo";
+    // Nothing to redo
+    if (changes.empty() || ((int)changes.size() == lastChange))
+        return;
+
+    // Undo action
+    Step *s = (Step *)changes.at(lastChange);
+    switch (s->action)
+    {
+    case ADD:
+        data->add((Element*)s->object);
+        break;
+    case DELETE:
+        data->remove((Element*)s->object);
+        break;
+    default:
+        break;
+    }
+
+    lastChange++;
+
+    // Repaint glWindow
+    MainWindow::opw->repaint();
 }

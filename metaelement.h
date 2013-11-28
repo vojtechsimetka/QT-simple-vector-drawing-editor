@@ -26,6 +26,8 @@ public:
     void resizeTo(float x, float y);
     Element *getElement();
 
+    Point getOrigin() const;
+
 private:
     Element *element;
     Point origin;

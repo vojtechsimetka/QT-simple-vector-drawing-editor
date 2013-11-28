@@ -19,7 +19,7 @@ openglwidget::openglwidget(QWidget *parent):
     QGLWidget(parent)
 {
     // Initializes status
-    this->status = select_e;
+    this->status = SELECT_E;
 
     // Creates data set
     this->data = new Data();
@@ -85,7 +85,7 @@ void openglwidget::resizeGL(int w, int h)
  * @brief Mouse pressed event handler
  * @param event Reference to event descriptor
  */
-void openglwidget::mousePressEvent(QMouseEvent *event)
+void openglwidget::mouseReleaseEvent(QMouseEvent *event)
 {
     // There isn't any element that is being modified
     if (this->metaElement.isEmpty())
@@ -95,11 +95,11 @@ void openglwidget::mousePressEvent(QMouseEvent *event)
         // Determine what to do
         switch (this->status)
         {
-        case drawline:
+        case DRAWLINE:
             // Create new line
             e = new Line(event->x(),event->y(),event->x(),event->y());
             break;
-        case drawrectangle:
+        case DRAWRECTANGLE:
             // Create new rectangle
             e = new Rectangle(event->x(),event->y(),event->x(),event->y());
             break;
@@ -117,14 +117,11 @@ void openglwidget::mousePressEvent(QMouseEvent *event)
     {
         switch (this->status)
         {
-        case select_e:
+        case SELECT_E:
             break;
-        case drawline:
-        case drawrectangle:
-        case drawcircle:
-            // Resize element that is being modified
-            this->metaElement.resizeTo(event->x(),event->y());
-
+        case DRAWRECTANGLE:
+        case DRAWCIRCLE:
+        case DRAWLINE:
             // Add element to data structure
             this->data->add(metaElement.getElement());
 
@@ -148,12 +145,73 @@ void openglwidget::mousePressEvent(QMouseEvent *event)
  */
 void openglwidget::mouseMoveEvent(QMouseEvent *event)
 {
+    // Save mouse coordinates
+    float x = event->x();
+    float y = event->y();
+
     // Some element is being modified, change its size
     if (!this->metaElement.isEmpty())
-        this->metaElement.resizeTo(event->x(),event->y());
+    {
+        switch (this->status)
+        {
+        case SELECT_E:
+            break;
+        case DRAWCIRCLE:
+        case DRAWRECTANGLE:
+        case DRAWLINE:
+            // Save lines origin point
+            int x1 = this->metaElement.getOrigin().getX();
+            int y1 = this->metaElement.getOrigin().getY();
+
+            // Check if painted line is almost horizontal
+            if (isHorizontal(y1,y))
+                y = y1;
+            // Check if painted line is almost vertical
+            if (isVertical(x1,x))
+                x = x1;
+
+            break;
+        }
+
+
+        this->metaElement.resizeTo(x,y);
+    }
 
     // Repaint scene
     this->repaint();
+}
+
+/**
+ * @brief Find out if line specified with two coordinates is almost horizontal
+ * @param y1 First point's coordinate y
+ * @param y2 Second point's coordinate y
+ */
+bool openglwidget::isHorizontal(float y1, float y2)
+{
+    if (fabs(y2 - y1) < MINDISTANCE)
+        return true;
+    return false;
+}
+
+/**
+ * @brief Find out if line specified with two coordinates is almost vertical
+ * @param x1 First point's coordinate x
+ * @param x2 Second point's coordinate x
+ */
+bool openglwidget::isVertical(float x1, float x2)
+{
+    if (fabs(x2 - x1) < MINDISTANCE)
+        return true;
+    return false;
+}
+
+/**
+ * @brief openglwidget::setAction
+ * @param s
+ */
+bool openglwidget::isParallelToAnotherLine(float x1, float x2, float y1, float y2)
+{
+
 }
 
 void openglwidget::setAction(Status s)

@@ -84,3 +84,8 @@ Element *MetaElement::getElement()
 {
     return this->element;
 }
+Point MetaElement::getOrigin() const
+{
+    return origin;
+}
+
