@@ -17,9 +17,11 @@
 #include <QtOpenGL>
 #include "data.h"
 #include "metaelement.h"
+#include "line.h"
 
 // Necesarry declarations for linker
 class Data;
+class Line;
 
 // Drawer state enumerator
 typedef enum
@@ -43,6 +45,8 @@ private:
     Data *data;
     Status status;
     MetaElement metaElement;
+    Line *verticalDottedLine;
+    Line *horizonalDottedLine;
 
 protected:
     void resizeGL(int w, int h);
@@ -52,6 +56,8 @@ protected:
     bool isVertical(float x1, float x2);
     bool isParallelToAnotherLine(float x11, float y11, float *x21, float *y21);
     bool isDiagonal(float *x1, float *y1, float x2, float y2);
+    bool pointIsCloseToAnother(float *x, float *y);
+    void paintDottedLines();
 };
 
 #endif // OPENGLWIDGET_H

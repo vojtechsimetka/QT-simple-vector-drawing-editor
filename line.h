@@ -16,10 +16,10 @@ public:
     void resize(float x1, float y1, float x2, float y2);
 
     Point getP1() const;
-    void setP1(const Point &value);
+    void setP1(float x1, float y1);
 
     Point getP2() const;
-    void setP2(const Point &value);
+    void setP2(float x1, float y1);
 
 private:
     Point p1;

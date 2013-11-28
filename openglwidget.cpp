@@ -24,6 +24,10 @@ openglwidget::openglwidget(QWidget *parent):
     // Creates data set
     this->data = new Data();
 
+    // Init dotted line
+    this->verticalDottedLine = new Line(0,0,0,0);
+    this->horizonalDottedLine = new Line(0,0,0,0);
+
     // Sets mouse to be tracked even without any mouse button pressed
     this->setMouseTracking(true);
 }
@@ -43,7 +47,7 @@ openglwidget::~openglwidget()
 void openglwidget::initializeGL()
 {
     // Sets backround color
-    qglClearColor(QColor::fromRgb(255, 255, 255));
+    glClearColor(1,1,1,1);
 
     // Sets which matrix stack is used
     glMatrixMode(GL_PROJECTION);
@@ -68,6 +72,9 @@ void openglwidget::paintGL()
 
     // Paints element that is being drawn or resized
     this->metaElement.paintMe();
+
+    // Paints dotted line - ukazuje k cemu se to chyta..
+    this->paintDottedLines();
 }
 
 /**
@@ -87,6 +94,10 @@ void openglwidget::resizeGL(int w, int h)
  */
 void openglwidget::mouseReleaseEvent(QMouseEvent *event)
 {
+    // Save mouse point
+    float x = event->x();
+    float y = event->y();
+
     // There isn't any element that is being modified
     if (this->metaElement.isEmpty())
     {
@@ -96,12 +107,14 @@ void openglwidget::mouseReleaseEvent(QMouseEvent *event)
         switch (this->status)
         {
         case DRAWLINE:
+            // Catch to close point
+            pointIsCloseToAnother(&x,&y);
             // Create new line
-            e = new Line(event->x(),event->y(),event->x(),event->y());
+            e = new Line(x,y,x,y);
             break;
         case DRAWRECTANGLE:
             // Create new rectangle
-            e = new Rectangle(event->x(),event->y(),event->x(),event->y());
+            e = new Rectangle(x,y,x,y);
             break;
 
         default:
@@ -126,6 +139,11 @@ void openglwidget::mouseReleaseEvent(QMouseEvent *event)
             this->data->add(metaElement.getElement());
             // Dehighlight all elements
             this->data->deHighlightAll();
+            // Clear dotted lines
+            this->verticalDottedLine->setP1(0,0);
+            this->verticalDottedLine->setP2(0,0);
+            this->horizonalDottedLine->setP1(0,0);
+            this->horizonalDottedLine->setP2(0,0);
             // Clear information in metaelement
             this->metaElement.clear();
             break;
@@ -174,14 +192,18 @@ void openglwidget::mouseMoveEvent(QMouseEvent *event)
                 x = x1;
             else if (this->isDiagonal(&x, &y, x1, y1))
                 ;
-            // Check if painted line is almost parallel to another
-
+            pointIsCloseToAnother(&x,&y);
 
             break;
         }
 
 
         this->metaElement.resizeTo(x,y);
+    }
+    else
+    {
+        if (this->status == DRAWLINE)
+            pointIsCloseToAnother(&x,&y);
     }
 
     // Repaint scene
@@ -236,10 +258,7 @@ bool openglwidget::isDiagonal(float *x1, float *y1, float x2, float y2)
     return false;
 }
 
-/**
- * @brief openglwidget::setAction
- * @param s
- */
+
 bool openglwidget::isParallelToAnotherLine(float x11, float y11, float *x21, float *y21)
 {
     // Get all elements in window
@@ -292,6 +311,127 @@ bool openglwidget::isParallelToAnotherLine(float x11, float y11, float *x21, flo
     return parallelFound;
 }
 
+/**
+ * @brief Find out if poit is close to another
+ * @param x Point's X coordinate
+ * @param y Point's Y coordinate
+ * @return true or false
+ */
+bool openglwidget::pointIsCloseToAnother(float *x, float *y)
+{
+    // Get all elements in window
+    std::vector<Element *> allElements = this->data->getElements();
+    std::vector<Element *>::iterator it = allElements.begin();
+
+    bool closeXPointFound = false;
+    bool closeYPointFound = false;
+
+    // Find if some line is parallel to current painted line
+    for (it; it != allElements.end(); ++it) {
+        // Get line
+        Line *e = (Line *)(*it);
+        // Get lines coordinates
+        float x1 = e->getP1().getX();
+        float y1 = e->getP1().getY();
+        float x2 = e->getP2().getX();
+        float y2 = e->getP2().getY();
+
+        if (fabs(x1 - *x) < MINDISTANCE)
+        {
+            *x = x1;
+            this->verticalDottedLine->setP1(*x,*y);
+            this->verticalDottedLine->setP2(x1,y1);
+            closeXPointFound = true;
+        }
+        else if (fabs(x2 - *x) < MINDISTANCE)
+        {
+            *x = x2;
+            this->verticalDottedLine->setP1(*x,*y);
+            this->verticalDottedLine->setP2(x2,y2);
+            closeXPointFound = true;
+        }
+
+        if (fabs(y1 - *y) < MINDISTANCE)
+        {
+            *y = y1;
+            this->horizonalDottedLine->setP1(*x,*y);
+            this->horizonalDottedLine->setP2(x1,y1);
+            this->verticalDottedLine->setP1(*x,*y);
+
+            closeYPointFound = true;
+        }
+        else if (fabs(y2 - *y) < MINDISTANCE)
+        {
+            *y = y2;
+            this->horizonalDottedLine->setP1(*x,*y);
+            this->horizonalDottedLine->setP2(x2,y2);
+            this->verticalDottedLine->setP1(*x,*y);
+            closeYPointFound = true;
+        }
+    }
+
+    if (!closeXPointFound)
+    {
+        this->verticalDottedLine->setP1(0,0);
+        this->verticalDottedLine->setP2(0,0);
+    }
+    if (!closeYPointFound)
+    {
+        this->horizonalDottedLine->setP1(0,0);
+        this->horizonalDottedLine->setP2(0,0);
+    }
+
+    return (closeXPointFound || closeYPointFound);
+}
+
+/**
+ * @brief Paint dotted line
+ */
+void openglwidget::paintDottedLines()
+{
+    // Nothing to paint
+    if (((this->verticalDottedLine->getP1().getX() == this->verticalDottedLine->getP2().getX())
+        && (this->verticalDottedLine->getP1().getY() == this->verticalDottedLine->getP2().getY()))
+        &&
+       ((this->horizonalDottedLine->getP1().getX() == this->horizonalDottedLine->getP2().getX())
+        && (this->horizonalDottedLine->getP1().getY() == this->horizonalDottedLine->getP2().getY())))
+        return;
+
+    // get first line's coordinates
+    float x1 = this->verticalDottedLine->getP1().getX();
+    float y1 = this->verticalDottedLine->getP1().getY();
+    float x2 = this->verticalDottedLine->getP2().getX();
+    float y2 = this->verticalDottedLine->getP2().getY();
+
+    // get second line's coordinates
+    float x12 = this->horizonalDottedLine->getP1().getX();
+    float y12 = this->horizonalDottedLine->getP1().getY();
+    float x22 = this->horizonalDottedLine->getP2().getX();
+    float y22 = this->horizonalDottedLine->getP2().getY();
+
+    glColor3f(0.0, 1.0, 0.0);
+    glLineStipple(1, 0xAAAA);
+    glEnable(GL_LINE_STIPPLE);
+
+    glBegin(GL_LINES);
+    glVertex2f(x1,y1);
+    glVertex2f(x2,y2);
+    glEnd();
+
+    glColor3f(1.0, 0.0, 0.0);
+    glBegin(GL_LINES);
+    glVertex2f(x12,y12);
+    glVertex2f(x22,y22);
+    glEnd();
+
+    glDisable(GL_LINE_STIPPLE);
+}
+
+
+/**
+ * @brief openglwidget::setAction
+ * @param s
+ */
 void openglwidget::setAction(Status s)
 {
     this->status = s;

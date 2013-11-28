@@ -65,18 +65,20 @@ Point Line::getP1() const
     return p1;
 }
 
-void Line::setP1(const Point &value)
+void Line::setP1(float x1, float y1)
 {
-    p1 = value;
+    this->p1.setX(x1);
+    this->p1.setY(y1);
 }
 Point Line::getP2() const
 {
     return p2;
 }
 
-void Line::setP2(const Point &value)
+void Line::setP2(float x1, float y1)
 {
-    p2 = value;
+    this->p2.setX(x1);
+    this->p2.setY(y1);
 }
 
 
