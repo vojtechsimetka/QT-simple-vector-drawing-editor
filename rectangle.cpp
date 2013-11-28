@@ -50,14 +50,6 @@ void Rectangle::PaintMe() const
 }
 
 /**
- * @brief Highlight rectangle in OpenGL context
- */
-void Rectangle::HighlightMe()
-{
-    ;
-}
-
-/**
  * @brief Resize rectangle
  * @param x1 First point's coordinate x
  * @param y1 First point's coordinate y

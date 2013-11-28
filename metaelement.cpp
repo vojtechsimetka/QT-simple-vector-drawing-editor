@@ -59,6 +59,23 @@ void MetaElement::paintMe()
 }
 
 /**
+ * @brief Highlight the element that is being modified
+ */
+void MetaElement::highlightMe()
+{
+    this->element->highlightMe();
+}
+
+/**
+ * @brief Dehighlight the element that is being modified
+ */
+void MetaElement::deHighlightMe()
+{
+    this->element->deHighlightMe();
+}
+
+
+/**
  * @brief Resizes element from origin to point with coordinates x and y
  * @param x Coordinate x for resizing
  * @param y Coordinate y for resizing

@@ -14,9 +14,11 @@ public:
     void paintAll();
     void add(Element *e);
     void remove(Element *e);
+    std::vector<Element *> getElements();
+    void deHighlightAll();
 
 private:
-    QLinkedList<Element*> elements;
+    std::vector<Element*> elements;
 };
 
 #endif // DATA_H

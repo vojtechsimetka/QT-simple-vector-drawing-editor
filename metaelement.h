@@ -22,6 +22,8 @@ public:
     bool isEmpty();
     void init(Element *element, float x, float y);
     void paintMe();
+    void highlightMe();
+    void deHighlightMe();
     void clear();
     void resizeTo(float x, float y);
     Element *getElement();

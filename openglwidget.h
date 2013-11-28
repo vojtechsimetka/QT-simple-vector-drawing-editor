@@ -50,8 +50,8 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);
-    bool isParallelToAnotherLine(float x1, float x2, float y1, float y2);
-
+    bool isParallelToAnotherLine(float x11, float y11, float *x21, float *y21);
+    bool isDiagonal(float *x1, float *y1, float x2, float y2);
 };
 
 #endif // OPENGLWIDGET_H

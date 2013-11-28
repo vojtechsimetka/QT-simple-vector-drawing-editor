@@ -28,6 +28,7 @@ void ChangesLog::init(Data *d)
  */
 void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
 {
+    // TODO: Remove when logging is in opengl widget
     // Check if do is redo step
     if ((int)changes.size() != lastChange)
     {
@@ -51,7 +52,6 @@ void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
     // Add step to list of changes
     changes.push_back(s);
     lastChange++;
-    qDebug() << changes.size() << ":" << lastChange;
 }
 
 /**

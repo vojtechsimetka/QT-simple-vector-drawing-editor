@@ -30,18 +30,19 @@ Line::Line(float x1, float y1, float x2, float y2)
 void Line::PaintMe() const
 {
     // Sets color
-    glColor3f(0.0, 0.0, 0.0);
+    if (this->highlighted) {
+        glColor3f(1.0, 0.0, 0.0);
+    }
+    else
+    {
+        glColor3f(0.0, 0.0, 0.0);
+    }
 
     // Draws line
     glBegin(GL_LINES);
     glVertex2f(this->p1.getX(), this->p1.getY());
     glVertex2f(this->p2.getX(), this->p2.getY());
     glEnd();
-}
-
-void Line::HighlightMe()
-{
-    ;
 }
 
 /**

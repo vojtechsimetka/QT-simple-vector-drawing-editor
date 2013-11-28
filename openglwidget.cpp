@@ -124,7 +124,8 @@ void openglwidget::mouseReleaseEvent(QMouseEvent *event)
         case DRAWLINE:
             // Add element to data structure
             this->data->add(metaElement.getElement());
-
+            // Dehighlight all elements
+            this->data->deHighlightAll();
             // Clear information in metaelement
             this->metaElement.clear();
             break;
@@ -160,15 +161,21 @@ void openglwidget::mouseMoveEvent(QMouseEvent *event)
         case DRAWRECTANGLE:
         case DRAWLINE:
             // Save lines origin point
-            int x1 = this->metaElement.getOrigin().getX();
-            int y1 = this->metaElement.getOrigin().getY();
+            float x1 = this->metaElement.getOrigin().getX();
+            float y1 = this->metaElement.getOrigin().getY();
 
             // Check if painted line is almost horizontal
-            if (isHorizontal(y1,y))
+            if (isParallelToAnotherLine(x1,y1,&x,&y))
+                ;
+            else if (isHorizontal(y1,y))
                 y = y1;
             // Check if painted line is almost vertical
-            if (isVertical(x1,x))
+            else if (isVertical(x1,x))
                 x = x1;
+            else if (this->isDiagonal(&x, &y, x1, y1))
+                ;
+            // Check if painted line is almost parallel to another
+
 
             break;
         }
@@ -205,13 +212,84 @@ bool openglwidget::isVertical(float x1, float x2)
     return false;
 }
 
+bool openglwidget::isDiagonal(float *x1, float *y1, float x2, float y2)
+{
+    // Axis of 2nd and 4th quadrant
+    if (fabs((*x1 - x2) - (*y1 - y2)) < MINDISTANCE)
+    {
+        int d = *x1 - x2;
+
+        *x1 = x2 + d;
+        *y1 = y2 + d;
+        return true;
+    }
+
+    // Axis of 1st and 3th quadrant
+    else if (fabs((x2 - *x1) - (*y1 - y2)) < MINDISTANCE)
+    {
+        int d = x2 - *x1;
+
+        *x1 = x2 - d;
+        *y1 = y2 + d;
+        return true;
+    }
+    return false;
+}
+
 /**
  * @brief openglwidget::setAction
  * @param s
  */
-bool openglwidget::isParallelToAnotherLine(float x1, float x2, float y1, float y2)
+bool openglwidget::isParallelToAnotherLine(float x11, float y11, float *x21, float *y21)
 {
+    // Get all elements in window
+    std::vector<Element *> allElements = this->data->getElements();
+    std::vector<Element *>::iterator it = allElements.begin();
 
+    bool parallelFound = false;
+
+    // Find if some line is parallel to current painted line
+    for (it; it != allElements.end(); ++it) {
+        // First ratio
+        float firstRatio = (*y21 - y11) / (*x21 - x11);
+        // Get line
+        Line *e = (Line *)(*it);
+        // Get lines coordinates
+        float x12 = e->getP1().getX();
+        float y12 = e->getP1().getY();
+        float x22 = e->getP2().getX();
+        float y22 = e->getP2().getY();
+        // Second ratio
+        float secondRatio = (y22 - y12) / (x22 - x12);
+
+        // first ratio is almost equal to second ratio
+        if (fabs(secondRatio - firstRatio) < 0.1) {
+            // Highlight lines
+            e->highlightMe();
+
+            if (!parallelFound)
+            {
+                // Change y
+                if (firstRatio < 1) {
+                    // firstRatio must be equal to secondRatio
+                    *y21 = (secondRatio * (*x21 - x11)) + y11;
+                }
+                // Change x
+                else {
+                    // firstRatio must be equal to secondRatio
+                    *x21 = ((*y21 - y11) / secondRatio) + x11;
+                }
+                parallelFound = true;
+                this->metaElement.highlightMe();
+            }
+        } else {
+            // Dehighlight line
+            e->deHighlightMe();
+        }
+    }
+
+    if (!parallelFound) this->metaElement.deHighlightMe();
+    return parallelFound;
 }
 
 void openglwidget::setAction(Status s)
