@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     data.cpp \
     metaelement.cpp \
     rectangle.cpp \
-    changeslog.cpp
+    changeslog.cpp \
+    guidingline.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -31,7 +32,8 @@ HEADERS  += mainwindow.h \
     data.h \
     metaelement.h \
     rectangle.h \
-    changeslog.h
+    changeslog.h \
+    guidingline.h
 
 FORMS    += mainwindow.ui
 

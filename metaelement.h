@@ -11,8 +11,8 @@
 #ifndef METAELEMENT_H
 #define METAELEMENT_H
 
-#include "element.h"
 #include "point.h"
+#include "element.h"
 
 class MetaElement
 {

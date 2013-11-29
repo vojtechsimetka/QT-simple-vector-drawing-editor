@@ -17,11 +17,12 @@
 #include <QtOpenGL>
 #include "data.h"
 #include "metaelement.h"
-#include "line.h"
+#include "guidingline.h"
 
 // Necesarry declarations for linker
 class Data;
 class Line;
+class GuidingLine;
 
 // Drawer state enumerator
 typedef enum
@@ -45,8 +46,8 @@ private:
     Data *data;
     Status status;
     MetaElement metaElement;
-    Line *verticalDottedLine;
-    Line *horizonalDottedLine;
+    GuidingLine *verticalDottedLine;
+    GuidingLine *horizonalDottedLine;
 
 protected:
     void resizeGL(int w, int h);

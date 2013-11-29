@@ -76,8 +76,7 @@ Point Line::getP1() const
 
 void Line::setP1(float x, float y)
 {
-    this->getP1().setX(x);
-    this->getP1().setY(y);
+    this->p1.setLocation(x, y);
 }
 Point Line::getP2() const
 {
@@ -86,8 +85,7 @@ Point Line::getP2() const
 
 void Line::setP2(float x, float y)
 {
-    this->getP2().setX(x);
-    this->getP2().setY(y);
+    this->p2.setLocation(x, y);
 }
 
 

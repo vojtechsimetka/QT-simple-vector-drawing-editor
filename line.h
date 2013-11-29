@@ -3,7 +3,8 @@
 
 #include "element.h"
 #include "point.h"
-#include "openglwidget.h"
+#include <QGLWidget>
+#include <QtOpenGL>
 
 class Element;
 
@@ -12,7 +13,7 @@ class Line : public Element
 public:
     Line(float x1, float y1, float x2, float y2);
     ~Line();
-    void PaintMe() const;
+    virtual void PaintMe() const;
     void PaintPoints() const;
     void resize(float x1, float y1, float x2, float y2);
 
@@ -25,6 +26,8 @@ public:
 private:
     Point p1;
     Point p2;
+
+protected:
     float red;
     float green;
     float blue;
