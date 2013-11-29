@@ -55,9 +55,9 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);
-    bool isParallelToAnotherLine(float x11, float y11, float *x21, float *y21);
-    bool isDiagonal(float *x1, float *y1, float x2, float y2);
-    bool pointIsCloseToAnother(float *x, float *y);
+    bool catchToParallelLine(float x11, float y11, float *x21, float *y21);
+    bool catchToDiagonal(float *x1, float *y1, float x2, float y2);
+    void catchToClosePoint(float *x, float *y);
     void paintDottedLines();
 };
 

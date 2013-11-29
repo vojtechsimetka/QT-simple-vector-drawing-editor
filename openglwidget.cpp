@@ -108,7 +108,7 @@ void openglwidget::mouseReleaseEvent(QMouseEvent *event)
         {
         case DRAWLINE:
             // Catch to close point
-            pointIsCloseToAnother(&x,&y);
+            catchToClosePoint(&x,&y);
             // Create new line
             e = new Line(x,y,x,y);
             break;
@@ -183,17 +183,18 @@ void openglwidget::mouseMoveEvent(QMouseEvent *event)
             float x1 = this->metaElement.getOrigin().getX();
             float y1 = this->metaElement.getOrigin().getY();
 
+            // Check if painted line is almost parallel to another line
+            if (catchToParallelLine(x1,y1,&x,&y));
             // Check if painted line is almost horizontal
-            if (isParallelToAnotherLine(x1,y1,&x,&y))
-                ;
             else if (isHorizontal(y1,y))
                 y = y1;
             // Check if painted line is almost vertical
             else if (isVertical(x1,x))
                 x = x1;
-            else if (this->isDiagonal(&x, &y, x1, y1))
-                ;
-            pointIsCloseToAnother(&x,&y);
+            // Check if painted line is almost diagonal
+            else if (this->catchToDiagonal(&x, &y, x1, y1));
+            // Try to catch point to another very close point
+            catchToClosePoint(&x,&y);
 
             break;
         }
@@ -204,7 +205,7 @@ void openglwidget::mouseMoveEvent(QMouseEvent *event)
     else
     {
         if (this->status == DRAWLINE)
-            pointIsCloseToAnother(&x,&y);
+            catchToClosePoint(&x,&y);
     }
 
     // Repaint scene
@@ -235,7 +236,7 @@ bool openglwidget::isVertical(float x1, float x2)
     return false;
 }
 
-bool openglwidget::isDiagonal(float *x1, float *y1, float x2, float y2)
+bool openglwidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
 {
     // Axis of 2nd and 4th quadrant
     if (fabs((*x1 - x2) - (*y1 - y2)) < MINDISTANCE)
@@ -260,7 +261,7 @@ bool openglwidget::isDiagonal(float *x1, float *y1, float x2, float y2)
 }
 
 
-bool openglwidget::isParallelToAnotherLine(float x11, float y11, float *x21, float *y21)
+bool openglwidget::catchToParallelLine(float x11, float y11, float *x21, float *y21)
 {
     // Get all elements in window
     std::vector<Element *> allElements = this->data->getElements();
@@ -316,9 +317,8 @@ bool openglwidget::isParallelToAnotherLine(float x11, float y11, float *x21, flo
  * @brief Find out if poit is close to another
  * @param x Point's X coordinate
  * @param y Point's Y coordinate
- * @return true or false
  */
-bool openglwidget::pointIsCloseToAnother(float *x, float *y)
+void openglwidget::catchToClosePoint(float *x, float *y)
 {
     // Get all elements in window
     std::vector<Element *> allElements = this->data->getElements();
@@ -373,8 +373,6 @@ bool openglwidget::pointIsCloseToAnother(float *x, float *y)
 
     if (!closeYPointFound)
         this->horizonalDottedLine->invalidate();
-
-    return (closeXPointFound || closeYPointFound);
 }
 
 /**
@@ -387,39 +385,6 @@ void openglwidget::paintDottedLines()
 
     if (this->horizonalDottedLine->isValid())
         this->horizonalDottedLine->PaintMe();
-
-//    this->verticalDottedLine->PaintMe();
-//    this->horizonalDottedLine->PaintMe();
-
-
-//    // get first line's coordinates
-//    float x1 = this->verticalDottedLine->getP1().getX();
-//    float y1 = this->verticalDottedLine->getP1().getY();
-//    float x2 = this->verticalDottedLine->getP2().getX();
-//    float y2 = this->verticalDottedLine->getP2().getY();
-
-//    // get second line's coordinates
-//    float x12 = this->horizonalDottedLine->getP1().getX();
-//    float y12 = this->horizonalDottedLine->getP1().getY();
-//    float x22 = this->horizonalDottedLine->getP2().getX();
-//    float y22 = this->horizonalDottedLine->getP2().getY();
-
-//    glColor3f(0.0, 1.0, 0.0);
-//    glLineStipple(1, 0xAAAA);
-//    glEnable(GL_LINE_STIPPLE);
-
-//    glBegin(GL_LINES);
-//    glVertex2f(x1,y1);
-//    glVertex2f(x2,y2);
-//    glEnd();
-
-//    glColor3f(1.0, 0.0, 0.0);
-//    glBegin(GL_LINES);
-//    glVertex2f(x12,y12);
-//    glVertex2f(x22,y22);
-//    glEnd();
-
-//    glDisable(GL_LINE_STIPPLE);
 }
 
 
