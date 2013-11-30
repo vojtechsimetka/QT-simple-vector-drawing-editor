@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     metaelement.cpp \
     rectangle.cpp \
     changeslog.cpp \
-    guidingline.cpp
+    selectionrectangle.cpp \
+    guideline.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -33,7 +34,8 @@ HEADERS  += mainwindow.h \
     metaelement.h \
     rectangle.h \
     changeslog.h \
-    guidingline.h
+    selectionrectangle.h \
+    guideline.h
 
 FORMS    += mainwindow.ui
 

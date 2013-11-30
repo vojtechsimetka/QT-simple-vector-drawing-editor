@@ -1,18 +1,39 @@
+/**
+ * PGR 2013 project
+ * Used for tracking changes for redo and undo buttons
+ *
+ * @author  xskota05 Klara Vankova
+ *          xsimet00 Vojtech Simetka
+ * @date    2013/11/26
+ * @version 1
+ * @file    changeslog.cpp
+ */
 #include "changeslog.h"
 #include "mainwindow.h"
 
 ChangesLog *ChangesLog::changesLogInstance = new ChangesLog();
 
-ChangesLog::ChangesLog()
+/**
+ * @brief ChangesLog destructor
+ */
+ChangesLog::~ChangesLog()
 {
-
+    // TODO: Dealocate everything
 }
 
+/**
+ * @brief ChangesLog singleton constructor
+ * @return Singleton reference
+ */
 ChangesLog *ChangesLog::sharedInstance()
 {
     return changesLogInstance;
 }
 
+/**
+ * @brief Initializes changeslog
+ * @param d Data reference
+ */
 void ChangesLog::init(Data *d)
 {
     data = d;

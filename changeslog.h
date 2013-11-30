@@ -1,17 +1,29 @@
+/**
+ * PGR 2013 project
+ * Used for tracking changes for redo and undo buttons
+ *
+ * @author  xskota05 Klara Vankova
+ *          xsimet00 Vojtech Simetka
+ * @date    2013/11/26
+ * @version 1
+ * @file    changeslog.h
+ */
 #ifndef CHANGESLOG_H
 #define CHANGESLOG_H
 
 #include "data.h"
 
-// Actions which could be done
-enum Actions {
+// Actions that can be done
+enum Actions
+{
     ADD,
     DELETE,
     MOVE
 };
 
-// One step possible to do in app
-struct Step {
+// Steps possible to do in app
+struct Step
+{
     Actions action;
     int offsetX;
     int offsetY;
@@ -21,16 +33,11 @@ struct Step {
 class ChangesLog
 {
 private:
-    // Private constructor
     static ChangesLog *changesLogInstance;
-    ChangesLog();
-
-    // List of changes
+    ~ChangesLog();
     std::vector<Step *> changes;
     // Pointer behind last change in changes
     int lastChange;
-
-    // Connection to data
     Data *data;
 
 public:

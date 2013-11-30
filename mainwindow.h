@@ -29,11 +29,13 @@ public slots:
     void select();
     void rotate();
     void drawLine();
+    void dlt();
+    void pan();
 
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    static openglwidget *opw;
+    static OpenGLWidget *opw;
 
 private:
     Ui::MainWindow *ui;

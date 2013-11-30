@@ -56,8 +56,8 @@ void MetaElement::paintMe()
 {
     if (this->element != NULL)
     {
-        this->element->PaintMe();
-        this->element->PaintPoints();
+        this->element->paintMe();
+        this->element->paintPoints();
     }
 }
 
@@ -104,6 +104,11 @@ Element *MetaElement::getElement()
 {
     return this->element;
 }
+
+/**
+ * @brief Gets origin point of the element
+ * @return Point of origin
+ */
 Point MetaElement::getOrigin() const
 {
     return origin;

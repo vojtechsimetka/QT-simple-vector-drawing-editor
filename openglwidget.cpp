@@ -15,8 +15,13 @@
  * @brief OpenGL Widget constructor
  * @param parent Reference to parent component
  */
-openglwidget::openglwidget(QWidget *parent):
-    QGLWidget(parent)
+OpenGLWidget::OpenGLWidget(QWidget *parent)
+    : QGLWidget(parent)
+    , offset(0, 0)
+    , aux_offset(0, 0)
+    , mouse_start_position(0, 0)
+    , mouse_end_position(0, 0)
+    , scale(1)
 {
     // Initializes status
     this->status = SELECT_E;
@@ -25,17 +30,17 @@ openglwidget::openglwidget(QWidget *parent):
     this->data = new Data();
 
     // Init dotted line
-    this->verticalDottedLine = new GuidingLine(1,0,0);
-    this->horizonalDottedLine = new GuidingLine(0,1,0);
+    this->vertical_guideline = new GuideLine(1,0,0);
+    this->horizontal_guideline = new GuideLine(0,1,0);
 
     // Sets mouse to be tracked even without any mouse button pressed
     this->setMouseTracking(true);
 }
 
 /**
- * @brief openglwidget::~openglwidget
+ * @brief OpenGL Widget destructor
  */
-openglwidget::~openglwidget()
+OpenGLWidget::~OpenGLWidget()
 {
     // Unallocate data
     delete this->data;
@@ -44,7 +49,7 @@ openglwidget::~openglwidget()
 /**
  * @brief Initializes OpenGL
  */
-void openglwidget::initializeGL()
+void OpenGLWidget::initializeGL()
 {
     // Sets backround color
     glClearColor(1,1,1,1);
@@ -62,8 +67,16 @@ void openglwidget::initializeGL()
 /**
  * @brief Repaints scene
  */
-void openglwidget::paintGL()
+void OpenGLWidget::paintGL()
 {
+    // Saves matrix
+    glPushMatrix();
+
+    // Translates scene by offset
+    glTranslatef(this->offset.getX(),
+                 this->offset.getY(),
+                 0);
+
     // Clean the screen
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -73,8 +86,15 @@ void openglwidget::paintGL()
     // Paints element that is being drawn or resized
     this->metaElement.paintMe();
 
-    // Paints dotted line - ukazuje k cemu se to chyta..
-    this->paintDottedLines();
+    // Paints guiding lines
+    this->vertical_guideline->paintMe();
+    this->horizontal_guideline->paintMe();
+
+    // Restores matrix context
+    glPopMatrix();
+
+    // Draws selection rectangle
+    this->selection_rectangle.paintMe();
 }
 
 /**
@@ -82,7 +102,7 @@ void openglwidget::paintGL()
  * @param w New width
  * @param h New height
  */
-void openglwidget::resizeGL(int w, int h)
+void OpenGLWidget::resizeGL(int w, int h)
 {
     glLoadIdentity();
     glOrtho (0, w, h, 0, 0, 1);
@@ -92,40 +112,99 @@ void openglwidget::resizeGL(int w, int h)
  * @brief Mouse pressed event handler
  * @param event Reference to event descriptor
  */
-void openglwidget::mouseReleaseEvent(QMouseEvent *event)
+void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event)
 {
     // Save mouse point
-    float x = event->x();
-    float y = event->y();
+    float x = event->x() - this->offset.getX();
+    float y = event->y() - this->offset.getY();
 
-    // There isn't any element that is being modified
-    if (this->metaElement.isEmpty())
+    // Left mouse button release
+    if (event->button() == Qt::LeftButton)
     {
-        Element *e = NULL;
-
-        // Determine what to do
-        switch (this->status)
+        switch(this->status)
         {
-        case DRAWLINE:
-            // Catch to close point
-            catchToClosePoint(&x,&y);
-            // Create new line
-            e = new Line(x,y,x,y);
-            break;
-        case DRAWRECTANGLE:
-            // Create new rectangle
-            e = new Rectangle(x,y,x,y);
-            break;
+        case SELECT_E:
+            // Deactivates selection rectangle
+            this->selection_rectangle.deactivate();
 
+            // Selects all elements within selection rectangle
+            foreach (Element *e, this->data->getElements())
+            {
+                if (e->intersects(this->selection_rectangle, this->offset))
+                {
+                    this->selected_items.push_back(e);
+                    e->selectMe();
+                }
+                else
+                    e->deSelectMe();
+            }
+
+            break;
+        case DRAWLINE:
+        case DRAWRECTANGLE:
+            this->mouseReleaseDraw(x, y);
+            break;
         default:
             break;
         }
-
-        // Some element was created, set it for modification to metaelement
-        if (e != NULL)
-            this->metaElement.init(e,event->x(),event->y());
     }
 
+    // Right mouse button release
+    else if (event->button() == Qt::RightButton)
+        this->aux_offset.setLocation(0, 0);
+
+    // Repaint scene
+    this->repaint();
+}
+
+/**
+ * @brief Mouse pressed event handler
+ * @param event Reference to event descriptor
+ */
+void OpenGLWidget::mousePressEvent(QMouseEvent *event)
+{
+    // Stores mouse position for drawing selection rectangle
+    this->mouse_start_position.setLocation(event->x(), event->y());
+    this->mouse_end_position.setLocation(event->x(), event->y());
+
+    // Left mouse button pressed
+    if (event->buttons() & Qt::LeftButton)
+    {
+        switch(this->status)
+        {
+        case SELECT_E:
+            //TODO: test jestli jsem naohoud neklikl na nejaky objekt -> posun objektu
+
+            // Deselects all element
+            foreach (Element * e, this->selected_items)
+                e->deSelectMe();
+
+            // Clears selected items
+            this->selected_items.clear();
+
+            // Starts displaying selection rectangle
+            this->selection_rectangle.resize(this->mouse_start_position.getX(),
+                                             this->mouse_start_position.getY(),
+                                             this->mouse_end_position.getX(),
+                                             this->mouse_end_position.getY());
+        default:
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Implements drawing in mouse release
+ * @param x Coordinate x in model's coordinates system
+ * @param y Coordinate y in model's coordinates system
+ */
+void OpenGLWidget::mouseReleaseDraw(float x, float y)
+{
+    // There isn't any element that is being drawn
+    if (this->metaElement.isEmpty())
+        this->createNewElement(x, y);
+
+    // There is element being drawn, finish it
     else
     {
         switch (this->status)
@@ -142,70 +221,159 @@ void openglwidget::mouseReleaseEvent(QMouseEvent *event)
             this->data->deHighlightAll();
 
             // Clear dotted lines
-            this->verticalDottedLine->invalidate();
-            this->horizonalDottedLine->invalidate();
+            this->vertical_guideline->invalidate();
+            this->horizontal_guideline->invalidate();
 
             // Clear information in metaelement
             this->metaElement.clear();
-            break;
-        default:
+
+            // Starts new element from same coordinates where we've finnished
+            this->createNewElement(x, y);
             break;
 
+        default:
+            break;
         }
 
     }
+}
 
-    // Repaint scene
-    this->repaint();
+/**
+ * @brief Creates new element that is being drawn
+ * @param x Coordinate x of the newly created element
+ * @param y Coordinate y of the newly created element
+ */
+void OpenGLWidget::createNewElement(float x, float y)
+{
+    Element *e = NULL;
+
+    // Determine what to do
+    switch (this->status)
+    {
+    case DRAWLINE:
+        // Catch to close point
+        catchToClosePoint(&x,&y);
+        // Create new line
+        e = new Line(x,y,x,y);
+        break;
+    case DRAWRECTANGLE:
+        // Create new rectangle
+        e = new Rectangle(x,y,x,y);
+        break;
+
+    default:
+        break;
+    }
+
+    // Some element was created, set it for modification to metaelement
+    if (e != NULL)
+        this->metaElement.init(e,x,y);
 }
 
 /**
  * @brief Mouse moved event handler
  * @param event Reference to event descriptor
  */
-void openglwidget::mouseMoveEvent(QMouseEvent *event)
+void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
     // Save mouse coordinates
-    float x = event->x();
-    float y = event->y();
+    float x = event->x() - this->offset.getX();
+    float y = event->y() - this->offset.getY();
+    this->mouse_end_position.setLocation(event->x(), event->y());
 
-    // Some element is being modified, change its size
-    if (!this->metaElement.isEmpty())
+    // Left button
+    if (event->buttons() & Qt::RightButton)
     {
-        switch (this->status)
+        // Determines how far the mouse was dragged
+        float x1 = (event->x() - this->mouse_start_position.getX()) / this->scale;
+        float y1 = (event->y() - this->mouse_start_position.getY()) / this->scale;
+
+        // Determines change in x and y according to previous drag
+        float dx = (this->aux_offset.getX() - x1);
+        float dy = (this->aux_offset.getY() - y1);
+
+        // Sets previous drag
+        this->aux_offset.setLocation(this->aux_offset.getX() - dx,
+                                     this->aux_offset.getY() - dy);
+
+        // Sets new offset
+        this->offset.setLocation(this->offset.getX() - dx,
+                                 this->offset.getY() - dy);
+    }
+
+    // Right button
+    else if (event->button() & Qt::LeftButton ||
+             event->button() == 0)
+    {
+        // Some element is being modified, change its size
+        if (!this->metaElement.isEmpty())
         {
-        case SELECT_E:
-            break;
-        case DRAWCIRCLE:
-        case DRAWRECTANGLE:
-        case DRAWLINE:
-            // Save lines origin point
-            float x1 = this->metaElement.getOrigin().getX();
-            float y1 = this->metaElement.getOrigin().getY();
+            switch (this->status)
+            {
+            case SELECT_E:
+                break;
+            case DLT:
+                break;
+            case PAN:
+                break;
+            case ROTATE:
+                break;
+            case DRAWCIRCLE:
+            case DRAWRECTANGLE:
+            case DRAWLINE:
+                // Save lines origin point
+                float x1 = this->metaElement.getOrigin().getX();
+                float y1 = this->metaElement.getOrigin().getY();
 
-            // Check if painted line is almost parallel to another line
-            if (catchToParallelLine(x1,y1,&x,&y));
-            // Check if painted line is almost horizontal
-            else if (isHorizontal(y1,y))
-                y = y1;
-            // Check if painted line is almost vertical
-            else if (isVertical(x1,x))
-                x = x1;
-            // Check if painted line is almost diagonal
-            else if (this->catchToDiagonal(&x, &y, x1, y1));
-            // Try to catch point to another very close point
-            catchToClosePoint(&x,&y);
+                // Check if painted line is almost parallel to another line
+                if (catchToParallelLine(x1,y1,&x,&y))
+                    ;
+                // Check if painted line is almost horizontal
+                else if (isHorizontal(y1,y))
+                    y = y1;
+                // Check if painted line is almost vertical
+                else if (isVertical(x1,x))
+                    x = x1;
+                // Check if painted line is almost diagonal
+                else if (this->catchToDiagonal(&x, &y, x1, y1))
+                    ;
+                // Try to catch point to another very close point
+                catchToClosePoint(&x,&y);
 
-            break;
+                break;
+            }
+
+            // Resizes element
+            this->metaElement.resizeTo(x,y);
         }
 
+        // There is not any element being modified or drawn
+        else
+        {
+            // Create new line
+            if (this->status == DRAWLINE)
+                catchToClosePoint(&x,&y);
 
-        this->metaElement.resizeTo(x,y);
-    }
-    else
-    {
-        if (this->status == DRAWLINE)
-            catchToClosePoint(&x,&y);
+            // Draw selection rectangle
+            else if (this->status == SELECT_E &&
+                     event->buttons() & Qt::LeftButton)
+            {
+                this->selection_rectangle.resize(this->mouse_start_position.getX(),
+                                                 this->mouse_start_position.getY(),
+                                                 this->mouse_end_position.getX(),
+                                                 this->mouse_end_position.getY());
+
+                // Select or deselect element
+                foreach (Element *e, this->data->getElements())
+                {
+                    if (e->intersects(this->selection_rectangle, this->offset))
+                        e->selectMe();
+
+                    else
+                        e->deSelectMe();
+                }
+            }
+        }
     }
 
     // Repaint scene
@@ -217,7 +385,7 @@ void openglwidget::mouseMoveEvent(QMouseEvent *event)
  * @param y1 First point's coordinate y
  * @param y2 Second point's coordinate y
  */
-bool openglwidget::isHorizontal(float y1, float y2)
+bool OpenGLWidget::isHorizontal(float y1, float y2)
 {
     if (fabs(y2 - y1) < MINDISTANCE)
         return true;
@@ -229,14 +397,22 @@ bool openglwidget::isHorizontal(float y1, float y2)
  * @param x1 First point's coordinate x
  * @param x2 Second point's coordinate x
  */
-bool openglwidget::isVertical(float x1, float x2)
+bool OpenGLWidget::isVertical(float x1, float x2)
 {
     if (fabs(x2 - x1) < MINDISTANCE)
         return true;
     return false;
 }
 
-bool openglwidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
+/**
+ * @brief Catches line to diagonal
+ * @param x1 Coordinate x of point of origin
+ * @param y1 Coordinate y of point of origin
+ * @param x2 Coordinate x of second point
+ * @param y2 Coordinate y of second point
+ * @return True if element catched to a diagonal
+ */
+bool OpenGLWidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
 {
     // Axis of 2nd and 4th quadrant
     if (fabs((*x1 - x2) - (*y1 - y2)) < MINDISTANCE)
@@ -260,21 +436,26 @@ bool openglwidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
     return false;
 }
 
-
-bool openglwidget::catchToParallelLine(float x11, float y11, float *x21, float *y21)
+/**
+ * @brief Tests if there is a nearly parallel line to the line being drawn, makes drawn line parallel
+ * @param x11 Coordinate x of point of origin for line being drawn
+ * @param y11 Coordinate y of point of origin for line being drawn
+ * @param x21 Coordinate x of second point for line being drawn
+ * @param y21 Coordinate y of second point for line being drawn
+ * @return True if there is nearly parallel line to the one being drawn
+ */
+bool OpenGLWidget::catchToParallelLine(float x11, float y11, float *x21, float *y21)
 {
-    // Get all elements in window
-    std::vector<Element *> allElements = this->data->getElements();
-    std::vector<Element *>::iterator it = allElements.begin();
-
     bool parallelFound = false;
 
     // Find if some line is parallel to current painted line
-    for (; it != allElements.end(); ++it) {
+    foreach (Element *element, this->data->getElements())
+    {
         // First ratio
         float firstRatio = (*y21 - y11) / (*x21 - x11);
         // Get line
-        Line *e = (Line *)(*it);
+        Line *e = (Line *) element;
+
         // Get lines coordinates
         float x12 = e->getP1().getX();
         float y12 = e->getP1().getY();
@@ -283,33 +464,38 @@ bool openglwidget::catchToParallelLine(float x11, float y11, float *x21, float *
         // Second ratio
         float secondRatio = (y22 - y12) / (x22 - x12);
 
-        // first ratio is almost equal to second ratio
-        if (fabs(secondRatio - firstRatio) < 0.1) {
+        // First ratio is almost equal to second ratio
+        if (fabs(secondRatio - firstRatio) < 0.1)
+        {
             // Highlight lines
             e->highlightMe();
 
+            // This is first parallel line found, change coordinates of the line being drawn
             if (!parallelFound)
             {
                 // Change y
-                if (firstRatio < 1) {
+                if (firstRatio < 1)
                     // firstRatio must be equal to secondRatio
                     *y21 = (secondRatio * (*x21 - x11)) + y11;
-                }
+
                 // Change x
-                else {
+                else
                     // firstRatio must be equal to secondRatio
                     *x21 = ((*y21 - y11) / secondRatio) + x11;
-                }
+
                 parallelFound = true;
                 this->metaElement.highlightMe();
             }
-        } else {
-            // Dehighlight line
-            e->deHighlightMe();
         }
+        // Lines are not parallel, gehighlight
+        else
+            e->deHighlightMe();
     }
 
-    if (!parallelFound) this->metaElement.deHighlightMe();
+    // There isn't any parallel line to the one being drawn, dehighlight it
+    if (!parallelFound)
+        this->metaElement.deHighlightMe();
+
     return parallelFound;
 }
 
@@ -318,7 +504,7 @@ bool openglwidget::catchToParallelLine(float x11, float y11, float *x21, float *
  * @param x Point's X coordinate
  * @param y Point's Y coordinate
  */
-void openglwidget::catchToClosePoint(float *x, float *y)
+void OpenGLWidget::catchToClosePoint(float *x, float *y)
 {
     // Get all elements in window
     std::vector<Element *> allElements = this->data->getElements();
@@ -341,58 +527,66 @@ void openglwidget::catchToClosePoint(float *x, float *y)
         if (fabs(x1 - *x) < MINDISTANCE)
         {
             *x = x1;
-            this->verticalDottedLine->set(*x, *y, x1, y1);
+            this->vertical_guideline->set(*x, *y, x1, y1);
             closeXPointFound = true;
         }
         else if (fabs(x2 - *x) < MINDISTANCE)
         {
             *x = x2;
-            this->verticalDottedLine->set(*x, *y, x2, y2);
+            this->vertical_guideline->set(*x, *y, x2, y2);
             closeXPointFound = true;
         }
 
         if (fabs(y1 - *y) < MINDISTANCE)
         {
             *y = y1;
-            this->horizonalDottedLine->set(*x, *y, x1, y1);
-            this->verticalDottedLine->set(*x,*y, this->verticalDottedLine->getP2().getX(), this->verticalDottedLine->getP2().getY()); // VYZKOUSET!!!
+            this->horizontal_guideline->set(*x, *y, x1, y1);
+            this->vertical_guideline->set(*x,*y, this->vertical_guideline->getP2().getX(), this->vertical_guideline->getP2().getY()); // VYZKOUSET!!!
 
             closeYPointFound = true;
         }
         else if (fabs(y2 - *y) < MINDISTANCE)
         {
             *y = y2;
-            this->horizonalDottedLine->set(*x,*y, x2,y2);
-            this->verticalDottedLine->set(*x,*y, this->verticalDottedLine->getP2().getX(), this->verticalDottedLine->getP2().getY()); // VYZKOUSET!!!
+            this->horizontal_guideline->set(*x,*y, x2,y2);
+            this->vertical_guideline->set(*x,*y, this->vertical_guideline->getP2().getX(), this->vertical_guideline->getP2().getY()); // VYZKOUSET!!!
             closeYPointFound = true;
         }
     }
 
     if (!closeXPointFound)
-        this->verticalDottedLine->invalidate();
+        this->vertical_guideline->invalidate();
 
     if (!closeYPointFound)
-        this->horizonalDottedLine->invalidate();
-}
-
-/**
- * @brief Paint dotted line
- */
-void openglwidget::paintDottedLines()
-{
-    if (this->verticalDottedLine->isValid())
-        this->verticalDottedLine->PaintMe();
-
-    if (this->horizonalDottedLine->isValid())
-        this->horizonalDottedLine->PaintMe();
+        this->horizontal_guideline->invalidate();
 }
 
 
 /**
- * @brief openglwidget::setAction
- * @param s
+ * @brief Set tool to selected one
+ * @param tool Selected tool enumerator
  */
-void openglwidget::setAction(Status s)
+void OpenGLWidget::setAction(Status tool)
 {
-    this->status = s;
+    this->status = tool;
+    this->horizontal_guideline->invalidate();
+    this->vertical_guideline->invalidate();
+    this->selection_rectangle.deactivate();
+    this->metaElement.clear();
+}
+
+/**
+ * @brief Deletes selected items from the data structure
+ */
+void OpenGLWidget::deleteSelection()
+{
+    // Delete selected items from data
+    foreach (Element *e, this->selected_items)
+        data->remove(e);
+
+    // Clear selection
+    this->selected_items.clear();
+
+    // Repaint scene
+    this->repaint();
 }

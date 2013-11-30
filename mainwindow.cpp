@@ -13,7 +13,7 @@
 #include "changeslog.h"
 #include "openglwidget.h"
 
-openglwidget * MainWindow::opw = NULL;
+OpenGLWidget * MainWindow::opw = NULL;
 
 /**
  * @brief MainWindow constructor
@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Set's up user interface from an xml file
     ui->setupUi(this);
 
+    // Sets static reference to opengl widget
     MainWindow::opw = ui->widget;
 }
 
@@ -38,28 +39,59 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+/**
+ * @brief Undo clicked
+ */
 void MainWindow::undo()
 {
     // Undo
     ChangesLog::sharedInstance()->undoStep();
 }
+
+/**
+ * @brief Redo clicked
+ */
 void MainWindow::redo()
 {
     // Redo
     ChangesLog::sharedInstance()->redoStep();
 }
 
+/**
+ * @brief Select tool selected
+ */
 void MainWindow::select()
 {
     this->ui->widget->setAction(SELECT_E);
 }
 
+/**
+ * @brief Rotate tool selected
+ */
 void MainWindow::rotate()
 {
-    qDebug() << "Zvolil jsem rotate";
+    this->ui->widget->setAction(ROTATE);
 }
 
+/**
+ * @brief Drawline tool selected
+ */
 void MainWindow::drawLine()
 {
     this->ui->widget->setAction(DRAWLINE);
+}
+
+/**
+ * @brief Delete tool selected
+ */
+void MainWindow::dlt()
+{
+    this->ui->widget->setAction(DLT);
+    this->ui->widget->deleteSelection();
+}
+
+
+void MainWindow::pan()
+{
+    this->ui->widget->setAction(PAN);
 }

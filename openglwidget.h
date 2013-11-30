@@ -17,12 +17,13 @@
 #include <QtOpenGL>
 #include "data.h"
 #include "metaelement.h"
-#include "guidingline.h"
+#include "guideline.h"
+#include "selectionrectangle.h"
 
 // Necesarry declarations for linker
 class Data;
 class Line;
-class GuidingLine;
+class GuideLine;
 
 // Drawer state enumerator
 typedef enum
@@ -30,35 +31,49 @@ typedef enum
     DRAWLINE,
     DRAWRECTANGLE,
     DRAWCIRCLE,
-    SELECT_E
+    SELECT_E,
+    ROTATE,
+    DLT,
+    PAN
 } Status;
 
-class openglwidget : public QGLWidget
+class OpenGLWidget : public QGLWidget
 {
 public:
-    openglwidget(QWidget *parent = NULL);
-    ~openglwidget();
+    OpenGLWidget(QWidget *parent = NULL);
+    ~OpenGLWidget();
     void initializeGL();
     void paintGL();
     void setAction(Status s);
+    void deleteSelection();
 
 private:
     Data *data;
     Status status;
     MetaElement metaElement;
-    GuidingLine *verticalDottedLine;
-    GuidingLine *horizonalDottedLine;
+    GuideLine *vertical_guideline;
+    GuideLine *horizontal_guideline;
+    Point offset;
+    Point aux_offset;
+    Point mouse_start_position;
+    Point mouse_end_position;
+    float scale;
+    SelectionRectangle selection_rectangle;
+    std::list<Element *> selected_items;
 
-protected:
-    void resizeGL(int w, int h);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);
     bool catchToParallelLine(float x11, float y11, float *x21, float *y21);
     bool catchToDiagonal(float *x1, float *y1, float x2, float y2);
     void catchToClosePoint(float *x, float *y);
-    void paintDottedLines();
+    void mouseReleaseDraw(float x, float y);
+    void createNewElement(float x, float y);
+
+protected:
+    void resizeGL(int w, int h);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
 };
 
 #endif // OPENGLWIDGET_H

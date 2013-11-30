@@ -69,22 +69,38 @@ void Point::setLocation(float x, float y)
     this->y = y;
 }
 
+/**
+ * @brief Paints point p
+ * @param p Point to be painted
+ */
 void Point::paintPoint(Point p)
 {
     Point::paintPoint(p.getX(), p.getY());
 }
 
+/**
+ * @brief Paints point with coordinates x and y
+ * @param x Coordinate x of painted point
+ * @param y Coordinate y of painted point
+ */
 void Point::paintPoint(float x, float y)
 {
+    // Enables and sets blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glPointSize(5);
-    glColor4f(0.5, 0.75, 0.95, 0.5);
+    // Sets size
+    glPointSize(7);
+
+    // Sets color
+    glColor4f(0.5, 0.75, 0.95, 0.8);
+
+    // Draws primitive
     glBegin(GL_POINTS);
     glVertex2f(x, y);
     glEnd();
 
+    // Disables blending
     glDisable(GL_BLEND);
 }
 

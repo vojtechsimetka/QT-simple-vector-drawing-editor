@@ -27,7 +27,7 @@ Rectangle::Rectangle(float x1, float y1, float x2, float y2)
 /**
  * @brief Paints rectangle to OpenGL context
  */
-void Rectangle::PaintMe() const
+void Rectangle::paintMe() const
 {
     // Sets color
     glColor3f(0.0, 0.0, 0.0);
@@ -49,7 +49,10 @@ void Rectangle::PaintMe() const
     glEnd();
 }
 
-void Rectangle::PaintPoints() const
+/**
+ * @brief Paints points of the rectangle
+ */
+void Rectangle::paintPoints() const
 {
     Point::paintPoint(this->p1);
     Point::paintPoint(this->p2);
@@ -72,23 +75,56 @@ void Rectangle::resize(float x1, float y1, float x2, float y2)
     this->p2.setY(y2);
 
 }
+
+/**
+ * @brief Gets first point of the rectangle
+ * @return First rectangle point
+ */
 Point Rectangle::getP1() const
 {
     return p1;
 }
 
+/**
+ * @brief Sets rectangle's first point to new value
+ * @param value New first point's coordinates
+ */
 void Rectangle::setP1(const Point &value)
 {
     p1 = value;
 }
+
+/**
+ * @brief Gets second point of the rectangle
+ * @return Second rectangle point
+ */
 Point Rectangle::getP2() const
 {
     return p2;
 }
 
+/**
+ * @brief Sets rectangle's second point to new value
+ * @param value New second point's coordinates
+ */
 void Rectangle::setP2(const Point &value)
 {
     p2 = value;
+}
+
+/**
+ * @brief Tests if intersects with selection rectangle
+ * @param rect Selection rectangle reference
+ * @param offset Scene offset
+ * @return True if intersects with selection rectangle
+ */
+bool Rectangle::intersects(SelectionRectangle rect, Point offset)
+{
+    return rect.intersects(this->p1, offset) ||
+           rect.intersects(this->p2, offset) ||
+           rect.intersects(this->p1.getX(), this->p2.getY(), offset) ||
+           rect.intersects(this->p2.getX(), this->p1.getY(), offset);
+
 }
 
 

@@ -1,18 +1,33 @@
+/**
+ * PGR 2013 project
+ * Abstract class used for all objects that can be drawn
+ *
+ * @author  xskota05 Klara Vankova
+ *          xsimet00 Vojtech Simetka
+ * @date    2013/11/25
+ * @version 1
+ * @file    element.h
+ */
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
+#include "selectionrectangle.h"
 class Element
 {
 public:
-    inline Element() { this->highlighted = false; }
-    virtual void PaintMe() const = 0;
-    virtual void PaintPoints() const = 0;
-    inline void highlightMe() { highlighted = true; }
-    inline void deHighlightMe() { highlighted = false; }
+    Element();
+    virtual void paintMe() const = 0;
+    virtual void paintPoints() const = 0;
     virtual void resize(float x1, float y1, float x2, float y2) = 0;
+    virtual bool intersects(SelectionRectangle, Point) = 0;
+    void highlightMe();
+    void deHighlightMe();
+    void selectMe();
+    void deSelectMe();
 
 protected:
     bool highlighted;
+    bool selected;
 };
 
 #endif // ELEMENT_H

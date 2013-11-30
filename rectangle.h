@@ -21,10 +21,10 @@ class Rectangle : public Element
 public:
     Rectangle(float x1, float y1, float x2, float y2);
     ~Rectangle();
-    void PaintMe() const;
-    void PaintPoints() const;
+    void paintMe() const;
+    void paintPoints() const;
     void resize(float x1, float y1, float x2, float y2);
-
+    bool intersects(SelectionRectangle, Point offset);
 
     Point getP1() const;
     void setP1(const Point &value);

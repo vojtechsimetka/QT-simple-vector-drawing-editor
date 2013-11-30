@@ -1,3 +1,13 @@
+/**
+ * PGR 2013 project
+ * Data class for editor, stores all elements and logs changes
+ *
+ * @author  xskota05 Klara Vankova
+ *          xsimet00 Vojtech Simetka
+ * @date    2013/11/25
+ * @version 1
+ * @file    data.h
+ */
 #ifndef DATA_H
 #define DATA_H
 
