@@ -64,6 +64,7 @@ private:
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);
     bool catchToParallelLine(float x11, float y11, float *x21, float *y21);
+    bool catchToPerpendicular(float x11, float y11, float *x21, float *y21);
     bool catchToDiagonal(float *x1, float *y1, float x2, float y2);
     void catchToClosePoint(float *x, float *y);
     void mouseReleaseDraw(float x, float y);
@@ -74,6 +75,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
+    void keyPressEvent(QKeyEvent *keyEvent);
 };
 
 #endif // OPENGLWIDGET_H

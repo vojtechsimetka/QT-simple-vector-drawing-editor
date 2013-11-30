@@ -49,16 +49,6 @@ void ChangesLog::init(Data *d)
  */
 void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
 {
-    // TODO: Remove when logging is in opengl widget
-    // Check if do is redo step
-    if ((int)changes.size() != lastChange)
-    {
-        Step *s = (Step *)changes.at(lastChange);
-        // Return, step is in the list
-        if (s->object == object)
-            return;
-    }
-
     // Remove all possible redo
     while ((int)changes.size() != lastChange)
         changes.pop_back();
@@ -87,6 +77,8 @@ void ChangesLog::undoStep()
     // Point to last change
     lastChange--;
 
+    std::list<Element *> *list;
+
     // Undo action
     Step *s = (Step *)changes.at(lastChange);
     switch (s->action)
@@ -95,7 +87,12 @@ void ChangesLog::undoStep()
         data->remove((Element*)s->object);
         break;
     case DELETE:
-        data->add((Element*)s->object);
+
+        list = (std::list<Element *> *) s->object;
+        foreach (Element *e, *list) {
+            data->add(e);
+        }
+
         break;
     default:
         break;
@@ -114,6 +111,8 @@ void ChangesLog::redoStep()
     if (changes.empty() || ((int)changes.size() == lastChange))
         return;
 
+    std::list<Element *> *list;
+
     // Undo action
     Step *s = (Step *)changes.at(lastChange);
     switch (s->action)
@@ -122,7 +121,11 @@ void ChangesLog::redoStep()
         data->add((Element*)s->object);
         break;
     case DELETE:
-        data->remove((Element*)s->object);
+        list = (std::list<Element *> *) s->object;
+        foreach (Element *e, *list) {
+            data->remove(e);
+        }
+
         break;
     default:
         break;

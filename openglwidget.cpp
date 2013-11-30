@@ -9,6 +9,8 @@
  * @file    openglwidget.cpp
  */
 #include "openglwidget.h"
+#include "math.h"
+#include "changeslog.h"
 #include <QtDebug>
 
 /**
@@ -28,6 +30,9 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
 
     // Creates data set
     this->data = new Data();
+
+    // Init Changes log
+    ChangesLog::sharedInstance()->init(this->data);
 
     // Init dotted line
     this->vertical_guideline = new GuideLine(1,0,0);
@@ -216,6 +221,8 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
         case DRAWLINE:
             // Add element to data structure
             this->data->add(metaElement.getElement());
+            // Logs addition
+            ChangesLog::sharedInstance()->doStep(ADD,0,0,metaElement.getElement());
 
             // Dehighlight all elements
             this->data->deHighlightAll();
@@ -228,6 +235,7 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
             this->metaElement.clear();
 
             // Starts new element from same coordinates where we've finnished
+            this->catchToClosePoint(&x,&y);
             this->createNewElement(x, y);
             break;
 
@@ -260,7 +268,6 @@ void OpenGLWidget::createNewElement(float x, float y)
         // Create new rectangle
         e = new Rectangle(x,y,x,y);
         break;
-
     default:
         break;
     }
@@ -268,6 +275,28 @@ void OpenGLWidget::createNewElement(float x, float y)
     // Some element was created, set it for modification to metaelement
     if (e != NULL)
         this->metaElement.init(e,x,y);
+}
+
+/**
+ * @brief Keyboard pressed event handler
+ * @param keyEvent Reference to event descriptor
+ */
+void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
+{
+    // Key was pressed
+    if (keyEvent->key())
+    {
+        // Space was pressed
+        if (Qt::Key_Space)
+        {
+            // Stop with drawing lines
+            if (this->status == DRAWLINE)
+            {
+                this->metaElement.clear();
+                this->repaint();
+            }
+        }
+    }
 }
 
 /**
@@ -327,6 +356,9 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 
                 // Check if painted line is almost parallel to another line
                 if (catchToParallelLine(x1,y1,&x,&y))
+                    ;
+
+                if (catchToPerpendicular(x1,y1,&x,&y))
                     ;
                 // Check if painted line is almost horizontal
                 else if (isHorizontal(y1,y))
@@ -434,6 +466,48 @@ bool OpenGLWidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
         return true;
     }
     return false;
+}
+
+/**
+ * @brief Tests if there is a nearly perpendicular line to the line being drawn, makes drawn line perpendicular
+ * @param x11 Coordinate x of point of origin for line being drawn
+ * @param y11 Coordinate y of point of origin for line being drawn
+ * @param x21 Coordinate x of second point for line being drawn
+ * @param y21 Coordinate y of second point for line being drawn
+ * @return True if there is nearly perpendicular line to the one being drawn
+ */
+bool OpenGLWidget::catchToPerpendicular(float x11, float y11, float *x21, float *y21)
+{
+    bool perpendicularFound = false;
+
+    // Lenght of first line
+    float a = sqrt(pow(*x21 - x11,2.) + pow(*y21 - y11,2.));
+
+    // Find if some line is perpendicular to current painted line
+    foreach (Element *element, this->data->getElements())
+    {
+        Line *e = (Line *)element;
+
+        // Get lines coordinates
+        float x12 = e->getP1().getX();
+        float y12 = e->getP1().getY();
+        float x22 = e->getP2().getX();
+        float y22 = e->getP2().getY();
+
+        // Lenght of second line
+        float b = sqrt(pow(x22 - x12,2.) + pow(y22 - y12,2.));
+
+        // Lenght of third line
+        float c1 = pow(*x21 - x12,2.) + pow(*y21 - y12,2.);
+        float c2 = pow(*x21 - x22,2.) + pow(*y21 - y22,2.);
+
+        // Test of perpendicularity
+        if ((c1 == pow(a,2.) + pow(b,2.))
+                || (c2 == pow(a,2.) + pow(b,2.)))
+        {
+            //qDebug() << "KOLME" << sqrt(c1);
+        }
+    }
 }
 
 /**
@@ -583,6 +657,9 @@ void OpenGLWidget::deleteSelection()
     // Delete selected items from data
     foreach (Element *e, this->selected_items)
         data->remove(e);
+
+    // Logs deletion
+    ChangesLog::sharedInstance()->doStep(DELETE,0,0,new std::list<Element *>(this->selected_items));
 
     // Clear selection
     this->selected_items.clear();

@@ -9,7 +9,6 @@
  * @file    data.cpp
  */
 #include "data.h"
-#include "changeslog.h"
 #include <QDebug>
 
 /**
@@ -17,7 +16,6 @@
  */
 Data::Data()
 {
-    ChangesLog::sharedInstance()->init(this);
 }
 
 /**
@@ -32,9 +30,6 @@ void Data::createLine(float x1, float y1, float x2, float y2)
     // Creates and stores line
     Line *l = new Line(x1, y1, x2, y2);
     this->elements.push_back(l);
-
-    // Logs addition
-    ChangesLog::sharedInstance()->doStep(ADD,0,0,l);
 }
 
 /**
@@ -68,8 +63,6 @@ void Data::add(Element * e)
     // Stores element
     this->elements.push_back(e);
 
-    // Logs addition
-    ChangesLog::sharedInstance()->doStep(ADD,0,0,e);
 }
 
 /**
@@ -81,10 +74,7 @@ void Data::remove(Element *e)
     // Erases element
     std::vector<Element *>::iterator it = std::find(this->elements.begin(), this->elements.end(), e);
     if(it != this->elements.end())
-        this->elements.erase(it);
-
-    // Logs deletion
-    ChangesLog::sharedInstance()->doStep(DELETE,0,0,e);
+        this->elements.erase(it);  
 }
 
 /**
