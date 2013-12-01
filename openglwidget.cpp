@@ -24,6 +24,7 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
     , mouse_start_position(0, 0)
     , mouse_end_position(0, 0)
     , scale(1)
+    , treshold_value(MINDISTANCE)
 {
     // Initializes status
     this->status = SELECT_E;
@@ -77,6 +78,8 @@ void OpenGLWidget::paintGL()
     // Saves matrix
     glPushMatrix();
 
+    glScalef(this->scale, this->scale, this->scale);
+
     // Translates scene by offset
     glTranslatef(this->offset.getX(),
                  this->offset.getY(),
@@ -120,8 +123,8 @@ void OpenGLWidget::resizeGL(int w, int h)
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event)
 {
     // Save mouse point
-    float x = event->x() - this->offset.getX();
-    float y = event->y() - this->offset.getY();
+    float x = (event->x() / this->scale) - this->offset.getX();
+    float y = (event->y() / this->scale) - this->offset.getY();
 
     // Left mouse button release
     if (event->button() == Qt::LeftButton)
@@ -300,14 +303,54 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
 }
 
 /**
+ * @brief Mouse wheel event handler
+ * @param event Reference to event descriptor
+ */
+void OpenGLWidget::wheelEvent(QWheelEvent* event)
+{
+    // Sets scale to new
+    this->scale += (float)(event->delta())/1000;
+
+    // Limit minimal maxification
+    if (this->scale < 0.1)
+    {
+        this->scale = 0.1;
+        this->treshold_value = MINDISTANCE / this->scale;
+        return;
+    }
+
+    // Limit maximal magnification
+    else if (this->scale > 50)
+    {
+        this->scale = 50;
+        this->treshold_value = MINDISTANCE / this->scale;
+        return;
+    }
+
+    this->treshold_value = MINDISTANCE / this->scale;
+
+
+//    this->offset.setLocation(this->offset.getX() + event->x()/(float)this->width() * event->delta(),
+//                             this->offset.getY() + event->y()/(float)this->height() * event->delta());
+
+//    qDebug() << this->offset.getX() + event->x()/(float)this->width()
+//             << this->offset.getY() + event->y()/(float)this->height();
+    // Repaints scene
+    this->repaint();
+
+//    this.offset.setLocation(this.offset.getX() - this.translateX(this.mouse_position.x)*e.getUnitsToScroll()/100/this.scale,
+//                            this.offset.getY() - this.translateY(this.mouse_position.y)*e.getUnitsToScroll()/100/this.scale);
+}
+
+/**
  * @brief Mouse moved event handler
  * @param event Reference to event descriptor
  */
 void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
     // Save mouse coordinates
-    float x = event->x() - this->offset.getX();
-    float y = event->y() - this->offset.getY();
+    float x = (event->x() / this->scale) - this->offset.getX();
+    float y = (event->y() / this->scale) - this->offset.getY();
     this->mouse_end_position.setLocation(event->x(), event->y());
 
     // Left button
@@ -419,7 +462,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
  */
 bool OpenGLWidget::isHorizontal(float y1, float y2)
 {
-    if (fabs(y2 - y1) < MINDISTANCE)
+    if (fabs(y2 - y1) < this->treshold_value)
         return true;
     return false;
 }
@@ -431,7 +474,7 @@ bool OpenGLWidget::isHorizontal(float y1, float y2)
  */
 bool OpenGLWidget::isVertical(float x1, float x2)
 {
-    if (fabs(x2 - x1) < MINDISTANCE)
+    if (fabs(x2 - x1) < this->treshold_value)
         return true;
     return false;
 }
@@ -447,7 +490,7 @@ bool OpenGLWidget::isVertical(float x1, float x2)
 bool OpenGLWidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
 {
     // Axis of 2nd and 4th quadrant
-    if (fabs((*x1 - x2) - (*y1 - y2)) < MINDISTANCE)
+    if (fabs((*x1 - x2) - (*y1 - y2)) < this->treshold_value)
     {
         int d = *x1 - x2;
 
@@ -457,7 +500,7 @@ bool OpenGLWidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
     }
 
     // Axis of 1st and 3th quadrant
-    else if (fabs((x2 - *x1) - (*y1 - y2)) < MINDISTANCE)
+    else if (fabs((x2 - *x1) - (*y1 - y2)) < this->treshold_value)
     {
         int d = x2 - *x1;
 
@@ -598,20 +641,20 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         float x2 = e->getP2().getX();
         float y2 = e->getP2().getY();
 
-        if (fabs(x1 - *x) < MINDISTANCE)
+        if (fabs(x1 - *x) < this->treshold_value)
         {
             *x = x1;
             this->vertical_guideline->set(*x, *y, x1, y1);
             closeXPointFound = true;
         }
-        else if (fabs(x2 - *x) < MINDISTANCE)
+        else if (fabs(x2 - *x) < this->treshold_value)
         {
             *x = x2;
             this->vertical_guideline->set(*x, *y, x2, y2);
             closeXPointFound = true;
         }
 
-        if (fabs(y1 - *y) < MINDISTANCE)
+        if (fabs(y1 - *y) < this->treshold_value)
         {
             *y = y1;
             this->horizontal_guideline->set(*x, *y, x1, y1);
@@ -619,7 +662,7 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
 
             closeYPointFound = true;
         }
-        else if (fabs(y2 - *y) < MINDISTANCE)
+        else if (fabs(y2 - *y) < this->treshold_value)
         {
             *y = y2;
             this->horizontal_guideline->set(*x,*y, x2,y2);

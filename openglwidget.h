@@ -11,14 +11,14 @@
 #ifndef OPENGLWIDGET_H
 #define OPENGLWIDGET_H
 
-#define MINDISTANCE 8
-
 #include <QGLWidget>
 #include <QtOpenGL>
 #include "data.h"
 #include "metaelement.h"
 #include "guideline.h"
 #include "selectionrectangle.h"
+
+const int MINDISTANCE = 8;
 
 // Necesarry declarations for linker
 class Data;
@@ -60,6 +60,7 @@ private:
     float scale;
     SelectionRectangle selection_rectangle;
     std::list<Element *> selected_items;
+    float treshold_value;
 
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);
@@ -76,6 +77,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *keyEvent);
+    void wheelEvent(QWheelEvent* event);
 };
 
 #endif // OPENGLWIDGET_H
