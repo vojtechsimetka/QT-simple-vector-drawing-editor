@@ -20,31 +20,42 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="OpenGLWidget" name="widget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>500</width>
-      <height>470</height>
-     </rect>
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="leftMargin">
+     <number>0</number>
     </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-      <horstretch>1</horstretch>
-      <verstretch>1</verstretch>
-     </sizepolicy>
+    <property name="topMargin">
+     <number>0</number>
     </property>
-    <property name="minimumSize">
-     <size>
-      <width>500</width>
-      <height>470</height>
-     </size>
+    <property name="rightMargin">
+     <number>0</number>
     </property>
-    <property name="mouseTracking">
-     <bool>false</bool>
+    <property name="bottomMargin">
+     <number>0</number>
     </property>
-   </widget>
+    <item row="0" column="0">
+     <widget class="OpenGLWidget" name="widget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>1</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>500</width>
+        <height>470</height>
+       </size>
+      </property>
+      <property name="sizeIncrement">
+       <size>
+        <width>1</width>
+        <height>1</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
