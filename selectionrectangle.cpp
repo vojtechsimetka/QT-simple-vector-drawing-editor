@@ -73,7 +73,7 @@ void SelectionRectangle::paintMe()
  * @param x2 Coordinate x of second point
  * @param y2 Coordinate y of second point
  */
-void SelectionRectangle::resize(float x1, float y1, float x2, float y2)
+void SelectionRectangle::resize(float x1, float y1, float x2, float y2, const Point offset, float scale)
 {
     this->width = fabs(x1 - x2);
     this->height = fabs(y1 - y2);
@@ -84,6 +84,8 @@ void SelectionRectangle::resize(float x1, float y1, float x2, float y2)
     this->max_y = min_y + this->height;
 
     this->active = true;
+
+    this->transform(offset, scale);
 }
 
 /**
@@ -97,25 +99,44 @@ void SelectionRectangle::deactivate()
 /**
  * @brief Tests if rectangle intersects with point
  * @param point Point to intersect with
- * @param offset Offset of the scene
  * @return True if point and rectangle intersects
  */
-bool SelectionRectangle::intersects(Point point, Point offset)
+bool SelectionRectangle::intersects(Point point)
 {
-    return this->intersects(point.getX(), point.getY(), offset);
+    return this->intersects(point.getX(), point.getY());
 }
 
 /**
  * @brief Tests if rectangle intersects with point
  * @param x Point's coordinate x
  * @param y Point's coordinate y
- * @param offset Offset of the scene
  * @return True if point and rectangle intersects
  */
-bool SelectionRectangle::intersects(float x, float y, Point offset)
+bool SelectionRectangle::intersects(float x, float y)
 {
-    return this->min_x < x + offset.getX() &&
-           this->max_x > x + offset.getX() &&
-           this->min_y < y + offset.getY() &&
-           this->max_y > y + offset.getY();
+    return this->translated_min_x < x &&
+           this->translated_max_x > x &&
+           this->translated_min_y < y &&
+           this->translated_max_y > y;
+}
+
+/**
+ * @brief Transforms rectangle to match model's offset
+ * @param offset Offset of the scene
+ * @param scale Scale of the scene
+ */
+void SelectionRectangle::transform(Point offset, float scale)
+{
+    this->translated_min_x = (this->min_x / scale) - offset.getX();
+    this->translated_max_x = (this->max_x / scale) - offset.getX();
+    this->translated_min_y = (this->min_y / scale) - offset.getY();
+    this->translated_max_y = (this->max_y / scale) - offset.getY();
+}
+
+bool SelectionRectangle::intersects(const Element *e)
+{
+    return e->intersects(this->translated_min_x,
+                         this->translated_min_y,
+                         this->translated_max_x,
+                         this->translated_max_y);
 }

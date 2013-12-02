@@ -26,7 +26,8 @@ public:
     virtual void paintMe() const;
     void paintPoints() const;
     void resize(float x1, float y1, float x2, float y2);
-    bool intersects(SelectionRectangle, Point offset);
+    bool intersects(float min_x, float min_y, float max_x, float max_y) const;
+    static bool lineIntersection(float a1, float b1, float c1, float a2, float b2, float b3);
 
     Point getP1() const;
     void setP1(float x, float y);

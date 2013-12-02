@@ -138,7 +138,7 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event)
             // Selects all elements within selection rectangle
             foreach (Element *e, this->data->getElements())
             {
-                if (e->intersects(this->selection_rectangle, this->offset))
+                if (this->selection_rectangle.intersects(e))
                 {
                     this->selected_items.push_back(e);
                     e->selectMe();
@@ -194,7 +194,9 @@ void OpenGLWidget::mousePressEvent(QMouseEvent *event)
             this->selection_rectangle.resize(this->mouse_start_position.getX(),
                                              this->mouse_start_position.getY(),
                                              this->mouse_end_position.getX(),
-                                             this->mouse_end_position.getY());
+                                             this->mouse_end_position.getY(),
+                                             this->offset,
+                                             this->scale);
         default:
             break;
         }
@@ -309,7 +311,8 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
 void OpenGLWidget::wheelEvent(QWheelEvent* event)
 {
     // Sets scale to new
-    this->scale += (float)(event->delta())/1000;
+    float delta_scale = (float)(event->delta())/1000;
+    this->scale += delta_scale;
 
     // Limit minimal maxification
     if (this->scale < 0.1)
@@ -327,19 +330,14 @@ void OpenGLWidget::wheelEvent(QWheelEvent* event)
         return;
     }
 
+    // Reevaluates treshold value used for guiding functions
     this->treshold_value = MINDISTANCE / this->scale;
 
-
-//    this->offset.setLocation(this->offset.getX() + event->x()/(float)this->width() * event->delta(),
-//                             this->offset.getY() + event->y()/(float)this->height() * event->delta());
-
-//    qDebug() << this->offset.getX() + event->x()/(float)this->width()
-//             << this->offset.getY() + event->y()/(float)this->height();
+    // Alternates offset so that zooming mouse cursor stays on same place
+    this->offset.setLocation(this->offset.getX() - (delta_scale * event->x())/this->scale,
+                             this->offset.getY() - (delta_scale * event->y())/this->scale);
     // Repaints scene
     this->repaint();
-
-//    this.offset.setLocation(this.offset.getX() - this.translateX(this.mouse_position.x)*e.getUnitsToScroll()/100/this.scale,
-//                            this.offset.getY() - this.translateY(this.mouse_position.y)*e.getUnitsToScroll()/100/this.scale);
 }
 
 /**
@@ -436,12 +434,14 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                 this->selection_rectangle.resize(this->mouse_start_position.getX(),
                                                  this->mouse_start_position.getY(),
                                                  this->mouse_end_position.getX(),
-                                                 this->mouse_end_position.getY());
+                                                 this->mouse_end_position.getY(),
+                                                 this->offset,
+                                                 this->scale);
 
                 // Select or deselect element
                 foreach (Element *e, this->data->getElements())
                 {
-                    if (e->intersects(this->selection_rectangle, this->offset))
+                    if (this->selection_rectangle.intersects(e))
                         e->selectMe();
 
                     else

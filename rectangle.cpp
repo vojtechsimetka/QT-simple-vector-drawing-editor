@@ -112,22 +112,10 @@ void Rectangle::setP2(const Point &value)
     p2 = value;
 }
 
-/**
- * @brief Tests if intersects with selection rectangle
- * @param rect Selection rectangle reference
- * @param offset Scene offset
- * @return True if intersects with selection rectangle
- */
-bool Rectangle::intersects(SelectionRectangle rect, Point offset)
+bool Rectangle::intersects(float min_x, float min_y, float max_x, float max_y) const
 {
-    return rect.intersects(this->p1, offset) ||
-           rect.intersects(this->p2, offset) ||
-           rect.intersects(this->p1.getX(), this->p2.getY(), offset) ||
-           rect.intersects(this->p2.getX(), this->p1.getY(), offset);
 
 }
-
-
 
 
 

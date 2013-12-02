@@ -19,7 +19,6 @@ class GuideLine: public Line
 {
 public:
     GuideLine(float red, float green, float blue);
-//    bool isValid();
     void set(float, float, float, float);
     void paintMe() const;
     void invalidate();

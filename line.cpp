@@ -136,15 +136,80 @@ void Line::setP2(float x, float y)
 }
 
 /**
- * @brief Tests if line and selection rectangle intersects
- * @param rect Selection rectangle reference
- * @param offset Scene offset
- * @return True if the line and a selection rectangle intersects
+ * @brief Tests if line intersects with rectangle alligned with axis x an y
+ * @param min_x Left border of rectangle
+ * @param min_y Bottom borner of rectangle
+ * @param max_x Right corner of rectangle
+ * @param max_y Top corner of rectangle
+ * @return True if line and rectangle intersects
  */
-bool Line::intersects(SelectionRectangle rect, Point offset)
+bool Line::intersects(float min_x, float min_y, float max_x, float max_y) const
 {
-    // TODO: REMAKE TO INTERSECTION WITH LINE AND RECTANGLE
-    return rect.intersects(this->getP1(), offset) ||
-           rect.intersects(this->getP2(), offset);
+    double t0 = 0.0;
+    double t1 = 1.0;
+    double d_x = this->getP2().getX()-this->getP1().getX();
+    double d_y = this->getP2().getY()-this->getP1().getY();
+    double p, q, r;
+
+    // Goes through alel four edges of rectangle
+    for(int edge = 0; edge < 4; edge++)
+    {
+        if (edge == 0)
+        {
+            p = -d_x;
+            q = -(min_x - this->getP1().getX());
+        }
+        if (edge == 1)
+        {
+            p = d_x;
+            q = (max_x - this->getP1().getX());
+        }
+        if (edge == 2)
+        {
+            p = -d_y;
+            q = -(min_y - this->getP1().getY());
+        }
+        if (edge == 3)
+        {
+            p = d_y;
+            q = (max_y - this->getP1().getY());
+        }
+        r = q / p;
+
+        // Line is parallel with some border and lies outside
+        if(p == 0 && q < 0)
+            return false;
+
+        if(p < 0)
+        {
+            if(r > t1)
+                return false;
+
+            // Line and rectangle possibly intersects
+            else if(r > t0)
+                t0 = r;
+        }
+        else if(p > 0)
+        {
+            if(r < t0)
+                return false;
+
+            // Line and rectangle possibly intersects
+            else if(r < t1)
+                t1 = r;
+        }
+    }
+
+    // Line intersects with rectangle
+    if (t0 < t1)
+        return true;
+
+
+    return false;
+}
+
+bool Line::lineIntersection(float a1, float b1, float c1, float a2, float b2, float b3)
+{
+
 }
 

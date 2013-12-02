@@ -14,16 +14,23 @@
 #include <QGLWidget>
 #include <QtOpenGL>
 #include "point.h"
+#include "element.h"
+#include "line.h"
+
+class Element;
 
 class SelectionRectangle
 {
 public:
     SelectionRectangle();
     void paintMe();
-    void resize(float, float, float, float);
+    void resize(float, float, float, float, const Point offset, float scale);
     void deactivate();
-    bool intersects(Point point, Point offset);
-    bool intersects(float x, float y, Point offset);
+    void transform(Point offset, float scale);
+    bool intersects(Point point);
+    bool intersects(float x, float y);
+    bool intersects(const Line *l);
+    bool intersects(const Element *l);
 
 private:
     float min_x;
@@ -33,6 +40,11 @@ private:
     float width;
     float height;
     bool active;
+
+    float translated_min_x;
+    float translated_min_y;
+    float translated_max_x;
+    float translated_max_y;
 };
 
 #endif // SELECTIONRECTANGLE_H
