@@ -68,6 +68,7 @@ private:
     bool catchToPerpendicular(float x11, float y11, float *x21, float *y21);
     bool catchToDiagonal(float *x1, float *y1, float x2, float y2);
     void catchToClosePoint(float *x, float *y);
+    void catchLenght(float x11, float y11, float *x21, float *y21);
     void mouseReleaseDraw(float x, float y);
     void createNewElement(float x, float y);
 

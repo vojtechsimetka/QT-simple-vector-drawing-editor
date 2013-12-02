@@ -395,6 +395,8 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                 float x1 = this->metaElement.getOrigin().getX();
                 float y1 = this->metaElement.getOrigin().getY();
 
+                catchLenght(x1,y1,&x,&y);
+
                 // Check if painted line is almost parallel to another line
                 if (catchToParallelLine(x1,y1,&x,&y))
                     ;
@@ -521,15 +523,55 @@ bool OpenGLWidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
  */
 bool OpenGLWidget::catchToPerpendicular(float x11, float y11, float *x21, float *y21)
 {
-    bool perpendicularFound = false;
+    // Direction of first line
+        float k1 = (*y21 - y11) / (*x21 - x11);
 
-    // Lenght of first line
-    float a = sqrt(pow(*x21 - x11,2.) + pow(*y21 - y11,2.));
+        // Find if some line is perpendicular to current painted line
+        foreach (Element *element, this->data->getElements())
+        {
+            Line *e = (Line *)element;
 
-    // Find if some line is perpendicular to current painted line
+            // Get lines coordinates
+            float x12 = e->getP1().getX();
+            float y12 = e->getP1().getY();
+            float x22 = e->getP2().getX();
+            float y22 = e->getP2().getY();
+
+            if (!(((x12 == x11) && (y12 == y11))
+                    || ((x22 == x11) && (y22 == y11))))
+                continue;
+
+            // Direction of second line
+            float k2 = (y22 - y12) / (x22 - x12);
+
+            if (fabs(k1 + (1/k2)) < 0.5)
+            {
+                if ((x12 == x11) && (y12 == y11))
+                {
+                    // move x
+                    if (k1 > 1)
+                    {
+                        *x21 = (-k2 * (*y21 - y11)) + x11;
+                    }
+                    else
+                    {
+                        *y21 = ((*x21 - x11) / -k2) + y11;
+                    }
+                }
+            }
+    }
+}
+
+void OpenGLWidget::catchLenght(float x11, float y11, float *x21, float *y21)
+{
+    float lenght1 = sqrt(pow(*x21 - x11,2.) + pow(*y21 - y11,2.));
+
+    float k = fabs((*y21 - y11) / (*x21 - x11));
+
+    // Find if some line is parallel to current painted line
     foreach (Element *element, this->data->getElements())
     {
-        Line *e = (Line *)element;
+        Line *e = (Line *) element;
 
         // Get lines coordinates
         float x12 = e->getP1().getX();
@@ -537,21 +579,73 @@ bool OpenGLWidget::catchToPerpendicular(float x11, float y11, float *x21, float 
         float x22 = e->getP2().getX();
         float y22 = e->getP2().getY();
 
-        // Lenght of second line
-        float b = sqrt(pow(x22 - x12,2.) + pow(y22 - y12,2.));
+        float lenght2 = sqrt(pow(x22 - x12,2.) + pow(y22 - y12,2.));
 
-        // Lenght of third line
-        float c1 = pow(*x21 - x12,2.) + pow(*y21 - y12,2.);
-        float c2 = pow(*x21 - x22,2.) + pow(*y21 - y22,2.);
-
-        // Test of perpendicularity
-        if ((c1 == pow(a,2.) + pow(b,2.))
-                || (c2 == pow(a,2.) + pow(b,2.)))
+        if (fabs(lenght2 - lenght1) < this->treshold_value)
         {
-            //qDebug() << "KOLME" << sqrt(c1);
+            float dx = sqrt(pow(lenght2-lenght1,2.) / (1 + pow(k,2.)));
+            float dy = k * dx;
+
+            // 1st quadrant
+            if ((*x21 > x11) && (*y21 >= y11))
+            {
+                if (lenght2 > lenght1)
+                {
+                    *x21 += dx;
+                    *y21 += dy;
+                } else
+                {
+                    *x21 -= dx;
+                    *y21 -= dy;
+                }
+
+            }
+            // 3rd quadrant
+            else if ((*x21 < x11) && (*y21 <= y11))
+            {
+                if (lenght2 > lenght1)
+                {
+                    *x21 -= dx;
+                    *y21 -= dy;
+                } else
+                {
+                    *x21 += dx;
+                    *y21 += dy;
+                }
+            }
+
+            // 2nd quadrant
+            else if ((*x21 <= x11) && (*y21 > y11))
+            {
+                if (lenght2 > lenght1)
+                {
+                    *x21 -= dx;
+                    *y21 += dy;
+                } else
+                {
+                    *x21 += dx;
+                    *y21 -= dy;
+                }
+            }
+
+            // 4th quadrant
+            else if ((*x21 >= x11) && (*y21 < y11))
+            {
+                if (lenght2 > lenght1)
+                {
+                    *x21 += dx;
+                    *y21 -= dy;
+                } else
+                {
+                    *x21 -= dx;
+                    *y21 += dy;
+                }
+            }
+
         }
     }
 }
+
 
 /**
  * @brief Tests if there is a nearly parallel line to the line being drawn, makes drawn line parallel
