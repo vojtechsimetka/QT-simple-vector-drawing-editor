@@ -208,6 +208,33 @@ bool Line::intersects(float min_x, float min_y, float max_x, float max_y) const
     return false;
 }
 
+float Line::length()
+{
+    return pow(p2.getX() - p1.getX(),2.) + pow(p2.getY() - p1.getY(),2.);
+}
+
+float Line::distanceFromPoint(float x, float y)
+{
+    float len = this->length();
+
+    // Distance to point
+    if (len == 0) return sqrt(pow(x - p1.getX(),2.) + pow(y - p1.getY(),2.));
+
+    // Consider the line extending the segment, parameterized as v + t (w - v).
+    // We find projection of point p onto the line.
+    // It falls where t = [(p-v) . (w-v)] / |w-v|^2
+    float t = ((x - this->p1.getX()) * (this->p2.getX() - this->p1.getX())
+               + (y - this->p1.getY()) * (this->p2.getY() - this->p1.getY())) / len;
+
+    if (t < 0) return sqrt(pow(x - this->p1.getX(),2.) + pow(y - this->p1.getY(),2.));
+    if (t > 1) return sqrt(pow(x - this->p2.getX(),2.) + pow(y - this->p2.getY(),2.));
+
+    float pomx = this->p1.getX() + t * (this->p2.getX() - this->p1.getX());
+    float pomy = this->p1.getY() + t * (this->p2.getY() - this->p1.getY());
+
+    return sqrt(pow(x - pomx,2.) + pow(y - pomy,2.));
+}
+
 bool Line::lineIntersection(float a1, float b1, float c1, float a2, float b2, float b3)
 {
 

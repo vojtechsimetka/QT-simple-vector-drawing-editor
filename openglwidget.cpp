@@ -301,6 +301,13 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
                 this->repaint();
             }
         }
+        else if (Qt::Key_K)
+        {
+            if (this->status == DRAWLINE)
+            {
+
+            }
+        }
     }
 }
 
