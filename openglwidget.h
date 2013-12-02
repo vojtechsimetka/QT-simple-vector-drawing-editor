@@ -46,6 +46,7 @@ public:
     void paintGL();
     void setAction(Status s);
     void deleteSelection();
+    void changeLength(float number);
 
 private:
     Data *data;

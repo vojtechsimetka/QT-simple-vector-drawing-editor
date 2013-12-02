@@ -13,6 +13,8 @@
 
 #include <QMainWindow>
 #include "openglwidget.h"
+#include "ui_mainwindow.h"
+#include "changeslog.h"
 
 namespace Ui
 {
@@ -31,11 +33,14 @@ public slots:
     void drawLine();
     void dlt();
     void pan();
+    void textChanged(QString string);
 
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     static OpenGLWidget *opw;
+    static QLineEdit * lineEdit;
+    void keyPressEvent(QKeyEvent *keyEvent);
 
 private:
     Ui::MainWindow *ui;

@@ -11,6 +11,7 @@
 #include "openglwidget.h"
 #include "math.h"
 #include "changeslog.h"
+#include "mainwindow.h"
 #include <QtDebug>
 
 /**
@@ -289,26 +290,109 @@ void OpenGLWidget::createNewElement(float x, float y)
 void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
 {
     // Key was pressed
-    if (keyEvent->key())
+    switch(keyEvent->key())
     {
-        // Space was pressed
-        if (Qt::Key_Space)
+    case Qt::Key_Space:
+        // Stop with drawing lines
+        if (this->status == DRAWLINE)
         {
-            // Stop with drawing lines
-            if (this->status == DRAWLINE)
-            {
-                this->metaElement.clear();
-                this->repaint();
-            }
+            this->metaElement.clear();
+            this->repaint();
         }
-        else if (Qt::Key_K)
+    case Qt::Key_K:
+        //
+        if (this->status == DRAWLINE)
         {
-            if (this->status == DRAWLINE)
-            {
 
-            }
         }
+    case Qt::Key_0:
+    case Qt::Key_Launch0:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "0");
+        break;
+
+    case Qt::Key_1:
+    case Qt::Key_Launch1:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "1");
+        break;
+
+    case Qt::Key_2:
+    case Qt::Key_Launch2:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "2");
+        break;
+
+    case Qt::Key_3:
+    case Qt::Key_Launch3:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "3");
+        break;
+
+    case Qt::Key_4:
+    case Qt::Key_Launch4:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "4");
+        break;
+
+    case Qt::Key_5:
+    case Qt::Key_Launch5:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "5");
+        break;
+
+    case Qt::Key_6:
+    case Qt::Key_Launch6:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "6");
+        break;
+
+    case Qt::Key_7:
+    case Qt::Key_Launch7:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "7");
+        break;
+
+    case Qt::Key_8:
+    case Qt::Key_Launch8:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "8");
+        break;
+
+    case Qt::Key_9:
+    case Qt::Key_Launch9:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "9");
+        break;
+
+    case Qt::Key_Backspace:
+    case Qt::Key_Delete:
+    case Qt::Key_Back:
+    case Qt::Key_B:
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text().remove(MainWindow::lineEdit->text().count()-1, 1));
+        if (MainWindow::lineEdit->text().count() == 0)
+            MainWindow::lineEdit->setText("0");
+        break;
+
+    case Qt::Key_Period:
+    case Qt::Key_Comma:
+        if (MainWindow::lineEdit->text().contains("."))
+            break;
+
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + ".");
+        break;
     }
+
+//    if (keyEvent->key())
+//    {
+//        // Space was pressed
+//        if (Qt::Key_Space)
+//        {
+//            // Stop with drawing lines
+//            if (this->status == DRAWLINE)
+//            {
+//                this->metaElement.clear();
+//                this->repaint();
+//            }
+//        }
+//        else if (Qt::Key_K)
+//        {
+//            if (this->status == DRAWLINE)
+//            {
+
+//            }
+//        }
+//    }
 }
 
 /**
@@ -810,4 +894,9 @@ void OpenGLWidget::deleteSelection()
 
     // Repaint scene
     this->repaint();
+}
+
+void OpenGLWidget::changeLength(float number)
+{
+    qDebug() << number;
 }
