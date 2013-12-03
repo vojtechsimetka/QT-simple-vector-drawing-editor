@@ -20,8 +20,11 @@ class GuideLine: public Line
 public:
     GuideLine(float red, float green, float blue);
     void set(float, float, float, float);
+    void resizeTo(float, float);
     void paintMe() const;
     void invalidate();
+
+    bool isValid() const;
 
 private:
     bool valid;

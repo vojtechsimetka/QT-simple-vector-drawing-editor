@@ -40,7 +40,6 @@ public:
     ~MainWindow();
     static OpenGLWidget *opw;
     static QLineEdit * lineEdit;
-    void keyPressEvent(QKeyEvent *keyEvent);
 
 private:
     Ui::MainWindow *ui;

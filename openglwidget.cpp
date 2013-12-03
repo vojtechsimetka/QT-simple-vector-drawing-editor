@@ -30,6 +30,7 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
 {
     // Initializes status
     this->status = SELECT_E;
+    this->catchStatus = CLASSIC;
 
     // Creates data set
     this->data = new Data();
@@ -369,6 +370,32 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
             this->repaint();
         }
         break;
+
+    case Qt::Key_P:
+        this->data->deHighlightAll();
+        this->vertical_guideline->invalidate();
+        this->horizontal_guideline->invalidate();
+        if (this->catchStatus != PARALLEL)
+            this->catchStatus = PARALLEL;
+        else this->catchStatus = CLASSIC;
+        break;
+    case Qt::Key_R:
+        this->data->deHighlightAll();
+        this->vertical_guideline->invalidate();
+        this->horizontal_guideline->invalidate();
+        if (this->catchStatus != PERPENDICULAR)
+            this->catchStatus = PERPENDICULAR;
+        else this->catchStatus = CLASSIC;
+        break;
+    case Qt::Key_M:
+        this->data->deHighlightAll();
+        this->vertical_guideline->invalidate();
+        this->horizontal_guideline->invalidate();
+        if (this->catchStatus != MIDDLE)
+            this->catchStatus = MIDDLE;
+        else this->catchStatus = CLASSIC;
+        break;
+
     case Qt::Key_0:
     case Qt::Key_Launch0:
 
@@ -542,23 +569,30 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                 float x1 = this->metaElement.getOrigin().getX();
                 float y1 = this->metaElement.getOrigin().getY();
 
-                catchToMiddleOfLine(&x,&y);
-                // Check if painted line is almost parallel to another line
-                if (catchToParallelLine(x1,y1,&x,&y))
-                    ;
-                if (catchToPerpendicular(x1,y1,&x,&y))
-                    ;
-                // Check if painted line is almost horizontal
-                else if (isHorizontal(y1,y))
+                if (isHorizontal(y1,y))
                     y = y1;
                 // Check if painted line is almost vertical
                 else if (isVertical(x1,x))
                     x = x1;
                 // Check if painted line is almost diagonal
-                else if (this->catchToDiagonal(&x, &y, x1, y1))
-                    ;
-                // Try to catch point to another very close point
-                catchToClosePoint(&x,&y);
+                else (this->catchToDiagonal(&x, &y, x1, y1));
+
+                switch (this->catchStatus)
+                {
+                case CLASSIC:
+                    // Try to catch point to another very close point
+                    catchToClosePoint(&x,&y);
+                    break;
+                case PARALLEL:
+                    catchToParallelLine(x1,y1,&x,&y);
+                    break;
+                case PERPENDICULAR:
+                    catchToPerpendicular(x1,y1,&x,&y);
+                    break;
+                case MIDDLE:
+                    catchToMiddleOfLine(&x,&y);
+                    break;
+                }
 
                 break;
             }
@@ -676,42 +710,51 @@ bool OpenGLWidget::catchToDiagonal(float *x1, float *y1, float x2, float y2)
 bool OpenGLWidget::catchToPerpendicular(float x11, float y11, float *x21, float *y21)
 {
     // Direction of first line
-        float k1 = (*y21 - y11) / (*x21 - x11);
+    float k1 = (*y21 - y11) / (*x21 - x11);
 
-        // Find if some line is perpendicular to current painted line
-        foreach (Element *element, this->data->getElements())
+    bool perpendicularFound = false;
+
+    // Find if some line is perpendicular to current painted line
+    foreach (Element *element, this->data->getElements())
+    {
+        Line *e = (Line *)element;
+
+        // Get lines coordinates
+        float x12 = e->getP1().getX();
+        float y12 = e->getP1().getY();
+        float x22 = e->getP2().getX();
+        float y22 = e->getP2().getY();
+
+        if (!(((x12 == x11) && (y12 == y11))
+                || ((x22 == x11) && (y22 == y11))))
+            continue;
+
+        // Direction of second line
+        float k2 = (y22 - y12) / (x22 - x12);
+
+        if (fabs(k1 + (1/k2)) < 0.5)
         {
-            Line *e = (Line *)element;
+            this->metaElement.highlightMe();
+            e->highlightMe();
+            perpendicularFound = true;
 
-            // Get lines coordinates
-            float x12 = e->getP1().getX();
-            float y12 = e->getP1().getY();
-            float x22 = e->getP2().getX();
-            float y22 = e->getP2().getY();
-
-            if (!(((x12 == x11) && (y12 == y11))
-                    || ((x22 == x11) && (y22 == y11))))
-                continue;
-
-            // Direction of second line
-            float k2 = (y22 - y12) / (x22 - x12);
-
-            if (fabs(k1 + (1/k2)) < 0.1)
+            if (k1 > 1)
             {
-                if ((x12 == x11) && (y12 == y11))
-                {
-                    // move x
-                    if (k1 > 1)
-                    {
-                        *x21 = (-k2 * (*y21 - y11)) + x11;
-                    }
-                    else
-                    {
-                        *y21 = ((*x21 - x11) / -k2) + y11;
-                    }
-                }
+                *x21 = (-k2 * (*y21 - y11)) + x11;
             }
+            else
+            {
+                *y21 = ((*x21 - x11) / -k2) + y11;
+            }
+        }
     }
+
+    if (!perpendicularFound)
+    {
+        this->metaElement.deHighlightMe();
+        this->data->deHighlightAll();
+    }
+    return perpendicularFound;
 }
 
 
@@ -779,6 +822,8 @@ bool OpenGLWidget::catchToParallelLine(float x11, float y11, float *x21, float *
     return parallelFound;
 }
 
+// NEFUNGUJE - JEN NA VODOROVNY CARY
+// TODO: PREPSAT!!
 void OpenGLWidget::catchToMiddleOfLine(float *x, float *y)
 {
     // Get all elements in window
@@ -861,8 +906,12 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
     bool closeXPointFound = false;
     bool closeYPointFound = false;
 
-    float k = ((*y - this->metaElement.getOrigin().getY())
-               / (*x - this->metaElement.getOrigin().getX()));
+    float k;
+    float factor = *x - this->metaElement.getOrigin().getX();
+    if (fabs(factor) > 1)
+        k = ((*y - this->metaElement.getOrigin().getY())
+             / (factor));
+    else k = INF;
 
     // Find if some line is parallel to current painted line
     for (; it != allElements.end(); ++it) {
@@ -926,11 +975,10 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
             // No line currently painting
             if ((this->metaElement.isEmpty())
                     || (*y == y1)
-                    || (fabs(*x - x1) < this->treshold_value)
-                    || (fabs(*x - x2) < this->treshold_value))
-
+                    || (vertical_guideline->isValid()))
             {
                 *y = y1;
+                vertical_guideline->resizeTo(*x, *y);
             }
             // Change currently painted lines leingth
             else
@@ -949,10 +997,10 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
             // No line currently painting
             if ((this->metaElement.isEmpty())
                     || (*y == y2)
-                    || (fabs(*x - x1) < this->treshold_value)
-                    || (fabs(*x - x2) < this->treshold_value))
+                    || (vertical_guideline->isValid()))
             {
                 *y = y2;
+                vertical_guideline->resizeTo(*x, *y);
             }
             // Change currently painted lines leingth
             else

@@ -19,6 +19,7 @@
 #include "selectionrectangle.h"
 
 const int MINDISTANCE = 8;
+const int INF = 10000;
 
 // Necesarry declarations for linker
 class Data;
@@ -38,6 +39,15 @@ typedef enum
     PAN
 } Status;
 
+// Catch status enumerator
+typedef enum
+{
+    CLASSIC,
+    PARALLEL,
+    PERPENDICULAR,
+    MIDDLE
+} CatchStatus;
+
 class OpenGLWidget : public QGLWidget
 {
 public:
@@ -54,6 +64,7 @@ public:
 private:
     Data *data;
     Status status;
+    CatchStatus catchStatus;
     MetaElement metaElement;
     GuideLine *vertical_guideline;
     GuideLine *horizontal_guideline;

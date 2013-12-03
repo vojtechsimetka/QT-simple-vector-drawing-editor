@@ -39,6 +39,12 @@ void GuideLine::set(float x1, float y1, float x2, float y2)
     this->valid = true;
 }
 
+void GuideLine::resizeTo(float x, float y)
+{
+    this->setP1(x,y);
+    this->valid = true;
+}
+
 /**
  * @brief Paints guiding line
  */
@@ -69,4 +75,8 @@ void GuideLine::paintMe() const
 void GuideLine::invalidate()
 {
     this->valid = false;
+}
+bool GuideLine::isValid() const
+{
+    return valid;
 }
