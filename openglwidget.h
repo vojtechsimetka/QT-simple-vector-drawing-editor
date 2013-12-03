@@ -34,6 +34,7 @@ typedef enum
     SELECT_E,
     ROTATE,
     DLT,
+    CHANGESIZE,
     PAN
 } Status;
 
@@ -46,7 +47,7 @@ public:
     void paintGL();
     void setAction(Status s);
     void deleteSelection();
-    void changeLength(float number);
+    void changeLength(float length);
 
 private:
     Data *data;
@@ -60,7 +61,7 @@ private:
     Point mouse_end_position;
     float scale;
     SelectionRectangle selection_rectangle;
-    std::list<Element *> selected_items;
+    std::vector<Element *> selected_items;
     float treshold_value;
 
     bool isHorizontal(float y1, float y2);
@@ -69,9 +70,10 @@ private:
     bool catchToPerpendicular(float x11, float y11, float *x21, float *y21);
     bool catchToDiagonal(float *x1, float *y1, float x2, float y2);
     void catchToClosePoint(float *x, float *y);
-    void catchLenght(float x11, float y11, float *x21, float *y21);
+    void catchToMiddleOfLine(float *x, float *y);
     void mouseReleaseDraw(float x, float y);
     void createNewElement(float x, float y);
+    QString qKeyEventToQString(QKeyEvent *keyEvent);
 
 protected:
     void resizeGL(int w, int h);

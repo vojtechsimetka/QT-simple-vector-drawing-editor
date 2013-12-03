@@ -218,6 +218,11 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
     // There is element being drawn, finish it
     else
     {
+        // Save coordinates
+        Line *l = (Line *)this->metaElement.getElement();
+        x = l->getP2().getX();
+        y = l->getP2().getY();
+
         switch (this->status)
         {
         case SELECT_E:
@@ -241,7 +246,6 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
             this->metaElement.clear();
 
             // Starts new element from same coordinates where we've finnished
-            this->catchToClosePoint(&x,&y);
             this->createNewElement(x, y);
             break;
 
@@ -283,12 +287,71 @@ void OpenGLWidget::createNewElement(float x, float y)
         this->metaElement.init(e,x,y);
 }
 
+QString OpenGLWidget::qKeyEventToQString(QKeyEvent *keyEvent)
+{
+    switch(keyEvent->key())
+    {
+    case Qt::Key_0:
+    case Qt::Key_Launch0:
+        return "0";
+        break;
+
+    case Qt::Key_1:
+    case Qt::Key_Launch1:
+        return "1";
+        break;
+
+    case Qt::Key_2:
+    case Qt::Key_Launch2:
+        return "2";
+        break;
+
+    case Qt::Key_3:
+    case Qt::Key_Launch3:
+        return "3";
+        break;
+
+    case Qt::Key_4:
+    case Qt::Key_Launch4:
+        return "4";
+        break;
+
+    case Qt::Key_5:
+    case Qt::Key_Launch5:
+        return "5";
+        break;
+
+    case Qt::Key_6:
+    case Qt::Key_Launch6:
+        return "6";
+        break;
+
+    case Qt::Key_7:
+    case Qt::Key_Launch7:
+        return "7";
+        break;
+
+    case Qt::Key_8:
+    case Qt::Key_Launch8:
+        return "8";
+        break;
+
+    case Qt::Key_9:
+    case Qt::Key_Launch9:
+        return "9";
+        break;
+    }
+
+    return "";
+}
+
 /**
  * @brief Keyboard pressed event handler
  * @param keyEvent Reference to event descriptor
  */
 void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
 {
+    static float len = 0;
     // Key was pressed
     switch(keyEvent->key())
     {
@@ -297,102 +360,91 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
         if (this->status == DRAWLINE)
         {
             this->metaElement.clear();
+            this->data->deHighlightAll();
+            this->vertical_guideline->invalidate();
+            this->horizontal_guideline->invalidate();
+            MainWindow::lineEdit->setText("");
             this->repaint();
         }
-    case Qt::Key_K:
-        //
-        if (this->status == DRAWLINE)
-        {
-
-        }
+        break;
     case Qt::Key_0:
     case Qt::Key_Launch0:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "0");
-        break;
 
     case Qt::Key_1:
     case Qt::Key_Launch1:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "1");
-        break;
 
     case Qt::Key_2:
     case Qt::Key_Launch2:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "2");
-        break;
 
     case Qt::Key_3:
     case Qt::Key_Launch3:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "3");
-        break;
 
     case Qt::Key_4:
     case Qt::Key_Launch4:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "4");
-        break;
 
     case Qt::Key_5:
     case Qt::Key_Launch5:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "5");
-        break;
 
     case Qt::Key_6:
     case Qt::Key_Launch6:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "6");
-        break;
 
     case Qt::Key_7:
     case Qt::Key_Launch7:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "7");
-        break;
 
     case Qt::Key_8:
     case Qt::Key_Launch8:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "8");
-        break;
 
     case Qt::Key_9:
     case Qt::Key_Launch9:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + "9");
+
+        // Switch state to changeSize - stop drawing
+        if (this->status == DRAWLINE)
+        {
+            this->status = CHANGESIZE;
+            len = MainWindow::lineEdit->text().toFloat();
+            MainWindow::lineEdit->setText("");
+        }
+        // Set new text
+        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + this->qKeyEventToQString(keyEvent));
+        break;
+
+    case Qt::Key_Enter:
+    case Qt::Key_Q:
+        this->status = DRAWLINE;
+        this->changeLength(MainWindow::lineEdit->text().toFloat());
+        break;
+
+    case Qt::Key_Escape:
+        if (this->status == CHANGESIZE)
+        {
+            this->status = DRAWLINE;
+            MainWindow::lineEdit->setText(QString::number(len));
+        }
         break;
 
     case Qt::Key_Backspace:
     case Qt::Key_Delete:
     case Qt::Key_Back:
     case Qt::Key_B:
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text().remove(MainWindow::lineEdit->text().count()-1, 1));
-        if (MainWindow::lineEdit->text().count() == 0)
-            MainWindow::lineEdit->setText("0");
+        if (this->status == CHANGESIZE)
+        {
+            MainWindow::lineEdit->setText(MainWindow::lineEdit->text().remove(MainWindow::lineEdit->text().count()-1, 1));
+            if (MainWindow::lineEdit->text().count() == 0)
+                MainWindow::lineEdit->setText("0");
+        }
         break;
 
     case Qt::Key_Period:
     case Qt::Key_Comma:
-        if (MainWindow::lineEdit->text().contains("."))
-            break;
+        if (this->status == CHANGESIZE)
+        {
+            if (MainWindow::lineEdit->text().contains("."))
+                break;
 
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + ".");
+            MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + ".");
+        }
         break;
     }
-
-//    if (keyEvent->key())
-//    {
-//        // Space was pressed
-//        if (Qt::Key_Space)
-//        {
-//            // Stop with drawing lines
-//            if (this->status == DRAWLINE)
-//            {
-//                this->metaElement.clear();
-//                this->repaint();
-//            }
-//        }
-//        else if (Qt::Key_K)
-//        {
-//            if (this->status == DRAWLINE)
-//            {
-
-//            }
-//        }
-//    }
 }
 
 /**
@@ -473,6 +525,8 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
             {
             case SELECT_E:
                 break;
+            case CHANGESIZE:
+                break;
             case DLT:
                 break;
             case PAN:
@@ -486,12 +540,10 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                 float x1 = this->metaElement.getOrigin().getX();
                 float y1 = this->metaElement.getOrigin().getY();
 
-                catchLenght(x1,y1,&x,&y);
-
+                catchToMiddleOfLine(&x,&y);
                 // Check if painted line is almost parallel to another line
                 if (catchToParallelLine(x1,y1,&x,&y))
                     ;
-
                 if (catchToPerpendicular(x1,y1,&x,&y))
                     ;
                 // Check if painted line is almost horizontal
@@ -509,8 +561,15 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                 break;
             }
 
-            // Resizes element
-            this->metaElement.resizeTo(x,y);
+            if (this->status != CHANGESIZE)
+            {
+                // Resizes element
+                this->metaElement.resizeTo(x,y);
+                float len = sqrt(pow(y - this->metaElement.getOrigin().getY(),2.)
+                                 + pow(x - this->metaElement.getOrigin().getX(),2.));
+
+                MainWindow::lineEdit->setText(QString::number(len));
+            }
         }
 
         // There is not any element being modified or drawn
@@ -635,7 +694,7 @@ bool OpenGLWidget::catchToPerpendicular(float x11, float y11, float *x21, float 
             // Direction of second line
             float k2 = (y22 - y12) / (x22 - x12);
 
-            if (fabs(k1 + (1/k2)) < 0.5)
+            if (fabs(k1 + (1/k2)) < 0.1)
             {
                 if ((x12 == x11) && (y12 == y11))
                 {
@@ -653,89 +712,6 @@ bool OpenGLWidget::catchToPerpendicular(float x11, float y11, float *x21, float 
     }
 }
 
-void OpenGLWidget::catchLenght(float x11, float y11, float *x21, float *y21)
-{
-    float lenght1 = sqrt(pow(*x21 - x11,2.) + pow(*y21 - y11,2.));
-
-    float k = fabs((*y21 - y11) / (*x21 - x11));
-
-    // Find if some line is parallel to current painted line
-    foreach (Element *element, this->data->getElements())
-    {
-        Line *e = (Line *) element;
-
-        // Get lines coordinates
-        float x12 = e->getP1().getX();
-        float y12 = e->getP1().getY();
-        float x22 = e->getP2().getX();
-        float y22 = e->getP2().getY();
-
-        float lenght2 = sqrt(pow(x22 - x12,2.) + pow(y22 - y12,2.));
-
-        if (fabs(lenght2 - lenght1) < this->treshold_value)
-        {
-            float dx = sqrt(pow(lenght2-lenght1,2.) / (1 + pow(k,2.)));
-            float dy = k * dx;
-
-            // 1st quadrant
-            if ((*x21 > x11) && (*y21 >= y11))
-            {
-                if (lenght2 > lenght1)
-                {
-                    *x21 += dx;
-                    *y21 += dy;
-                } else
-                {
-                    *x21 -= dx;
-                    *y21 -= dy;
-                }
-
-            }
-            // 3rd quadrant
-            else if ((*x21 < x11) && (*y21 <= y11))
-            {
-                if (lenght2 > lenght1)
-                {
-                    *x21 -= dx;
-                    *y21 -= dy;
-                } else
-                {
-                    *x21 += dx;
-                    *y21 += dy;
-                }
-            }
-
-            // 2nd quadrant
-            else if ((*x21 <= x11) && (*y21 > y11))
-            {
-                if (lenght2 > lenght1)
-                {
-                    *x21 -= dx;
-                    *y21 += dy;
-                } else
-                {
-                    *x21 += dx;
-                    *y21 -= dy;
-                }
-            }
-
-            // 4th quadrant
-            else if ((*x21 >= x11) && (*y21 < y11))
-            {
-                if (lenght2 > lenght1)
-                {
-                    *x21 += dx;
-                    *y21 -= dy;
-                } else
-                {
-                    *x21 -= dx;
-                    *y21 += dy;
-                }
-            }
-
-        }
-    }
-}
 
 
 /**
@@ -801,6 +777,74 @@ bool OpenGLWidget::catchToParallelLine(float x11, float y11, float *x21, float *
     return parallelFound;
 }
 
+void OpenGLWidget::catchToMiddleOfLine(float *x, float *y)
+{
+    // Get all elements in window
+    std::vector<Element *> allElements = this->data->getElements();
+    std::vector<Element *>::iterator it = allElements.begin();
+
+
+    float k = ((*y - this->metaElement.getOrigin().getY())
+               / (*x - this->metaElement.getOrigin().getX()));
+
+    // Find if some line is parallel to current painted line
+    for (; it != allElements.end(); ++it) {
+        // Get line
+        Line *e = (Line *)(*it);
+
+        // Get lines coordinates
+        float x1 = e->getP1().getX();
+        float y1 = e->getP1().getY();
+        float x2 = e->getP2().getX();
+        float y2 = e->getP2().getY();
+
+        float sx = x1 + (x2 - x1) / 2;
+        float sy = y1 + (y2 - y1) / 2;
+
+        // Close to line's first x coordinate
+        if (fabs(sx - *x) < this->treshold_value)
+        {
+            // No line currently painting
+            if ((this->metaElement.isEmpty())
+                    || (*x == sx))
+            {
+                *x = x1;
+            }
+            // Change currently painted lines leingth
+            else
+            {
+                float dx = (sx - *x);
+                float dy = k*dx;
+
+                *x = sx;
+                *y += dy;
+            }
+        }
+
+        if (fabs(sy - *y) < this->treshold_value)
+        {
+            // No line currently painting
+            if ((this->metaElement.isEmpty())
+                    || (*y == sy)
+                    || (fabs(*x - sx) < this->treshold_value))
+
+            {
+                *y = sy;
+            }
+            // Change currently painted lines leingth
+            else
+            {
+                float dy = (sy - *y);
+                float dx = dy/k;
+
+                *y = sy;
+                *x += dx;
+            }
+        }
+
+    }
+}
+
 /**
  * @brief Find out if poit is close to another
  * @param x Point's X coordinate
@@ -815,6 +859,9 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
     bool closeXPointFound = false;
     bool closeYPointFound = false;
 
+    float k = ((*y - this->metaElement.getOrigin().getY())
+               / (*x - this->metaElement.getOrigin().getX()));
+
     // Find if some line is parallel to current painted line
     for (; it != allElements.end(); ++it) {
         // Get line
@@ -826,32 +873,95 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         float x2 = e->getP2().getX();
         float y2 = e->getP2().getY();
 
+
+
+        // Close to line's first x coordinate
         if (fabs(x1 - *x) < this->treshold_value)
         {
-            *x = x1;
+            // No line currently painting
+            if ((this->metaElement.isEmpty())
+                    || (*x == x1))
+            {
+                *x = x1;
+            }
+            // Change currently painted lines leingth
+            else
+            {
+                float dx = (x1 - *x);
+                float dy = k*dx;
+
+                *x = x1;
+                *y += dy;
+            }
+
             this->vertical_guideline->set(*x, *y, x1, y1);
             closeXPointFound = true;
         }
+        // Close to line's second x coordinate
         else if (fabs(x2 - *x) < this->treshold_value)
         {
-            *x = x2;
+            // No line currently painting
+            if ((this->metaElement.isEmpty())
+                    || (*x == x2))
+            {
+                *x = x2;
+            }
+            // Change currently painted lines leingth
+            else
+            {
+                float dx = (x2 - *x);
+                float dy = k*dx;
+
+                *x = x2;
+                *y += dy;
+            }
             this->vertical_guideline->set(*x, *y, x2, y2);
             closeXPointFound = true;
         }
 
         if (fabs(y1 - *y) < this->treshold_value)
         {
-            *y = y1;
-            this->horizontal_guideline->set(*x, *y, x1, y1);
-            this->vertical_guideline->set(*x,*y, this->vertical_guideline->getP2().getX(), this->vertical_guideline->getP2().getY()); // VYZKOUSET!!!
+            // No line currently painting
+            if ((this->metaElement.isEmpty())
+                    || (*y == y1)
+                    || (fabs(*x - x1) < this->treshold_value)
+                    || (fabs(*x - x2) < this->treshold_value))
 
+            {
+                *y = y1;
+            }
+            // Change currently painted lines leingth
+            else
+            {
+                float dy = (y1 - *y);
+                float dx = dy/k;
+
+                *y = y1;
+                *x += dx;
+            }
+            this->horizontal_guideline->set(*x, *y, x1, y1);
             closeYPointFound = true;
         }
         else if (fabs(y2 - *y) < this->treshold_value)
         {
-            *y = y2;
+            // No line currently painting
+            if ((this->metaElement.isEmpty())
+                    || (*y == y2)
+                    || (fabs(*x - x1) < this->treshold_value)
+                    || (fabs(*x - x2) < this->treshold_value))
+            {
+                *y = y2;
+            }
+            // Change currently painted lines leingth
+            else
+            {
+                float dy = (y2 - *y);
+                float dx = dy/k;
+
+                *y = y2;
+                *x += dx;
+            }
             this->horizontal_guideline->set(*x,*y, x2,y2);
-            this->vertical_guideline->set(*x,*y, this->vertical_guideline->getP2().getX(), this->vertical_guideline->getP2().getY()); // VYZKOUSET!!!
             closeYPointFound = true;
         }
     }
@@ -887,7 +997,7 @@ void OpenGLWidget::deleteSelection()
         data->remove(e);
 
     // Logs deletion
-    ChangesLog::sharedInstance()->doStep(DELETE,0,0,new std::list<Element *>(this->selected_items));
+    ChangesLog::sharedInstance()->doStep(DELETE,0,0,new std::vector<Element *>(this->selected_items));
 
     // Clear selection
     this->selected_items.clear();
@@ -896,7 +1006,106 @@ void OpenGLWidget::deleteSelection()
     this->repaint();
 }
 
-void OpenGLWidget::changeLength(float number)
+/**
+ * @brief Change length of currently painted or selected line
+ * @param new length
+ */
+void OpenGLWidget::changeLength(float length)
 {
-    qDebug() << number;
+    if (length < 1)
+        return;
+
+    Line *l = NULL;
+    if (this->status != DRAWLINE)
+        if (!this->selected_items.empty())
+            l = (Line *)(this->selected_items.at(0));
+        else return;
+    else
+        l = (Line *)this->metaElement.getElement();
+
+    float x1 = l->getP1().getX();
+    float y1 = l->getP1().getY();
+    float x2 = l->getP2().getX();
+    float y2 = l->getP2().getY();
+
+    // Straight lines
+    if (y1 == y2)
+    {
+        if (x2 >= x1)
+            x2 = x1 + length;
+        else x2 = x1 - length;
+
+        l->resize(x1,y1,x2,y2);
+
+        x2 = x2 * this->scale + this->offset.getX();
+        y2 = y2 * this->scale + this->offset.getY();
+        QPoint *mousePos = new QPoint(x2,y2);
+        QCursor::setPos(this->mapToGlobal(*mousePos));
+        return;
+    }
+    else if (x1 == x2)
+    {
+        if (y2 >= y1)
+            y2 = y1 + length;
+        else y2 = y1 - length;
+
+        l->resize(x1,y1,x2,y2);
+
+        x2 = x2 * this->scale + this->offset.getX();
+        y2 = y2 * this->scale + this->offset.getY();
+        QPoint *mousePos = new QPoint(x2,y2);
+        QCursor::setPos(this->mapToGlobal(*mousePos));
+        return;
+    }
+
+    // Direction
+    float k = fabs((y2 - y1) / (x2 - x1));
+
+    // Origin length
+    float oldLength = sqrt(pow(x2 - x1,2.) + pow(y2 - y1,2.));
+
+    // Set the same length
+    if (fabs(oldLength - length) == 0)
+        return;
+
+    float dx = sqrt(pow(length,2.) / (pow(k,2.) + 1));
+    float dy = k * dx;
+
+    // 1st quadrant
+    if ((x2 > x1) && (y2 >= y1))
+    {
+        x2 = x1 + dx;
+        y2 = y1 + dy;
+    }
+
+    // 2nd quadrant
+    else if ((x2 <= x1) && (y2 > y1))
+    {
+        x2 = x1 - dx;
+        y2 = y1 + dy;
+    }
+
+    // 3rd quadrant
+    else if ((x2 < x1) && (y2 < y1))
+    {
+        x2 = x1 - dx;
+        y2 = y1 - dy;
+    }
+
+    // 4th quadrant
+    else if ((x2 > x1) && (y2 < y1))
+    {
+        x2 = x1 + dx;
+        y2 = y1 - dy;
+    }
+
+    l->resize(x1,y1,x2,y2);
+    //qDebug() << "x2:" << x1 << " y: " << y1 << " x: " << x2 << " y: " << y2;
+
+    x2 = x2 * this->scale + this->offset.getX();
+    y2 = y2 * this->scale + this->offset.getY();
+    QPoint *mousePos = new QPoint(x2,y2);
+    QCursor::setPos(this->mapToGlobal(*mousePos));
+
+    this->repaint();
 }

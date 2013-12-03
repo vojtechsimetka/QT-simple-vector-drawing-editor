@@ -77,7 +77,7 @@ void ChangesLog::undoStep()
     // Point to last change
     lastChange--;
 
-    std::list<Element *> *list;
+    std::vector<Element *> *list;
 
     // Undo action
     Step *s = (Step *)changes.at(lastChange);
@@ -88,7 +88,7 @@ void ChangesLog::undoStep()
         break;
     case DELETE:
 
-        list = (std::list<Element *> *) s->object;
+        list = (std::vector<Element *> *) s->object;
         foreach (Element *e, *list) {
             data->add(e);
         }
@@ -111,7 +111,7 @@ void ChangesLog::redoStep()
     if (changes.empty() || ((int)changes.size() == lastChange))
         return;
 
-    std::list<Element *> *list;
+    std::vector<Element *> *list;
 
     // Undo action
     Step *s = (Step *)changes.at(lastChange);
@@ -121,7 +121,7 @@ void ChangesLog::redoStep()
         data->add((Element*)s->object);
         break;
     case DELETE:
-        list = (std::list<Element *> *) s->object;
+        list = (std::vector<Element *> *) s->object;
         foreach (Element *e, *list) {
             data->remove(e);
         }

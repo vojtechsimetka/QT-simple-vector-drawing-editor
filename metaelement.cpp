@@ -85,7 +85,7 @@ void MetaElement::deHighlightMe()
  */
 void MetaElement::resizeTo(float x, float y)
 {
-    this->element->resize(x,y,origin.getX(),origin.getY());
+    this->element->resize(origin.getX(),origin.getY(),x,y);
 }
 
 /**

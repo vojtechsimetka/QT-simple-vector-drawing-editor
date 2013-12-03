@@ -100,7 +100,7 @@ void MainWindow::pan()
 
 void MainWindow::textChanged(QString string)
 {
-    this->ui->widget->changeLength(string.toFloat());
+    //this->ui->widget->changeLength(string.toFloat());
 }
 
 /**
