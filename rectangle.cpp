@@ -114,7 +114,12 @@ void Rectangle::setP2(const Point &value)
 
 bool Rectangle::intersects(float min_x, float min_y, float max_x, float max_y) const
 {
+    return false;
+}
 
+bool Rectangle::intersects(Point p) const
+{
+    return false;
 }
 
 

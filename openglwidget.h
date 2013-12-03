@@ -48,6 +48,8 @@ public:
     void setAction(Status s);
     void deleteSelection();
     void changeLength(float length);
+    Element *topObjectAtMousePosition();
+    static float treshold_value;
 
 private:
     Data *data;
@@ -62,7 +64,6 @@ private:
     float scale;
     SelectionRectangle selection_rectangle;
     std::vector<Element *> selected_items;
-    float treshold_value;
 
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);

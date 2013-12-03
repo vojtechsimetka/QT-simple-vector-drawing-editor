@@ -10,6 +10,7 @@
  */
 #include "line.h"
 #include <QDebug>
+#include "openglwidget.h"
 
 /**
  * @brief Line constructor
@@ -208,12 +209,12 @@ bool Line::intersects(float min_x, float min_y, float max_x, float max_y) const
     return false;
 }
 
-float Line::length()
+float Line::length() const
 {
     return pow(p2.getX() - p1.getX(),2.) + pow(p2.getY() - p1.getY(),2.);
 }
 
-float Line::distanceFromPoint(float x, float y)
+float Line::distanceFromPoint(float x, float y) const
 {
     float len = this->length();
 
@@ -239,4 +240,11 @@ bool Line::lineIntersection(float a1, float b1, float c1, float a2, float b2, fl
 {
 
 }
+
+ bool Line::intersects(Point p) const
+ {
+     if (this->distanceFromPoint(p.getX(), p.getY()) < OpenGLWidget::treshold_value)
+         return true;
+     return false;
+ }
 

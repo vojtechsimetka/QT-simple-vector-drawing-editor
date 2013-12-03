@@ -27,9 +27,10 @@ public:
     void paintPoints() const;
     void resize(float x1, float y1, float x2, float y2);
     bool intersects(float min_x, float min_y, float max_x, float max_y) const;
+    bool intersects(Point) const;
     static bool lineIntersection(float a1, float b1, float c1, float a2, float b2, float b3);
-    float distanceFromPoint(float x, float y);
-    float length();
+    float distanceFromPoint(float x, float y) const;
+    float length() const;
 
     Point getP1() const;
     void setP1(float x, float y);

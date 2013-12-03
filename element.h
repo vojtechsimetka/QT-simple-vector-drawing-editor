@@ -11,6 +11,8 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
+#include "point.h"
+
 class Element
 {
 public:
@@ -19,6 +21,7 @@ public:
     virtual void paintPoints() const = 0;
     virtual void resize(float x1, float y1, float x2, float y2) = 0;
     virtual bool intersects(float min_x, float min_y, float max_x, float max_y) const = 0;
+    virtual bool intersects(Point) const = 0;
     void highlightMe();
     void deHighlightMe();
     void selectMe();

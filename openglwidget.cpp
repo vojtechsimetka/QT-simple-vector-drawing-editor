@@ -14,6 +14,8 @@
 #include "mainwindow.h"
 #include <QtDebug>
 
+float OpenGLWidget::treshold_value = MINDISTANCE;
+
 /**
  * @brief OpenGL Widget constructor
  * @param parent Reference to parent component
@@ -25,7 +27,6 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
     , mouse_start_position(0, 0)
     , mouse_end_position(0, 0)
     , scale(1)
-    , treshold_value(MINDISTANCE)
 {
     // Initializes status
     this->status = SELECT_E;
@@ -183,6 +184,7 @@ void OpenGLWidget::mousePressEvent(QMouseEvent *event)
         {
         case SELECT_E:
             //TODO: test jestli jsem naohoud neklikl na nejaky objekt -> posun objektu
+            //Element * object = this->topObjectAtMousePosition();
 
             // Deselects all element
             foreach (Element * e, this->selected_items)
@@ -1108,4 +1110,32 @@ void OpenGLWidget::changeLength(float length)
     QCursor::setPos(this->mapToGlobal(*mousePos));
 
     this->repaint();
+}
+
+/**
+ * @brief Returns first element at the mouse position
+ * @return Reference to first element under cursor
+ */
+Element * OpenGLWidget::topObjectAtMousePosition()
+{
+    // Checks selected items frist
+    for (std::vector<Element*>::reverse_iterator it = this->selected_items.rbegin();
+         it != data->getElements().rend();
+         it++)
+    {
+        Element *e = (Element*) *it;
+        if (e->intersects(this->mouse_end_position))
+            return e;
+    }
+
+    // Checks all data
+    for (std::vector<Element*>::reverse_iterator it = data->getElements().rbegin();
+         it != data->getElements().rend();
+         it++)
+    {
+        Element *e = (Element*) *it;
+        if (e->intersects(this->mouse_end_position))
+            return e;
+    }
+    return NULL;
 }
