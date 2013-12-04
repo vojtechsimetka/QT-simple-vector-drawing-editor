@@ -13,9 +13,10 @@
 /**
  * @brief Element constructor
  */
-Element::Element()
+Element::Element(ElementType::Type type)
     : highlighted(false)
     , selected(false)
+    , type(type)
 {
 
 }
@@ -50,4 +51,14 @@ void Element::selectMe()
 void Element::deSelectMe()
 {
     selected = false;
+}
+
+ElementType::Type Element::getType() const
+{
+    return this->type;
+}
+
+bool Element::isSelected() const
+{
+    return this->selected;
 }

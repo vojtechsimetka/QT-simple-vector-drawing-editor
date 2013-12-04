@@ -29,9 +29,7 @@ class GuideLine;
 // Drawer state enumerator
 typedef enum
 {
-    DRAWLINE,
-    DRAWRECTANGLE,
-    DRAWCIRCLE,
+    DRAW,
     SELECT_E,
     ROTATE,
     DLT,
@@ -56,6 +54,7 @@ public:
     void initializeGL();
     void paintGL();
     void setAction(Status s);
+    void setAction(ElementType::Type t);
     void deleteSelection();
     void changeLength(float length);
     Element *topObjectAtMousePosition();
@@ -64,6 +63,7 @@ public:
 private:
     Data *data;
     Status status;
+    ElementType::Type type;
     CatchStatus catchStatus;
     MetaElement metaElement;
     GuideLine *vertical_guideline;
@@ -75,6 +75,7 @@ private:
     float scale;
     SelectionRectangle selection_rectangle;
     std::vector<Element *> selected_items;
+    bool items_being_dragged;
 
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);
@@ -86,6 +87,12 @@ private:
     void mouseReleaseDraw(float x, float y);
     void createNewElement(float x, float y);
     QString qKeyEventToQString(QKeyEvent *keyEvent);
+    void mouseReleaseSelect();
+    void mousePressSelect();
+    void mouseMoveDraw(float *x, float *y);
+    float translateX(float);
+    float translateY(float);
+    bool selectionContains(Element *);
 
 protected:
     void resizeGL(int w, int h);

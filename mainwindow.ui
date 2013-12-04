@@ -365,22 +365,6 @@
     </hint>
    </hints>
   </connection>
-  <connection>
-   <sender>lineEdit</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>textChanged(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>432</x>
-     <y>485</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>249</x>
-     <y>249</y>
-    </hint>
-   </hints>
-  </connection>
  </connections>
  <slots>
   <slot>undo()</slot>

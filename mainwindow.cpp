@@ -79,7 +79,7 @@ void MainWindow::rotate()
  */
 void MainWindow::drawLine()
 {
-    this->ui->widget->setAction(DRAWLINE);
+    this->ui->widget->setAction(ElementType::LINE);
 }
 
 /**
@@ -95,12 +95,6 @@ void MainWindow::dlt()
 void MainWindow::pan()
 {
     this->ui->widget->setAction(PAN);
-}
-
-// TODO: REMOVE
-void MainWindow::textChanged(QString string)
-{
-    //this->ui->widget->changeLength(string.toFloat());
 }
 
 

@@ -140,3 +140,8 @@ bool SelectionRectangle::intersects(const Element *e)
                          this->translated_max_x,
                          this->translated_max_y);
 }
+
+bool SelectionRectangle::isActive() const
+{
+    return this->active;
+}

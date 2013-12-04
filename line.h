@@ -30,6 +30,7 @@ public:
     bool intersects(Point) const;
     static bool lineIntersection(float a1, float b1, float c1, float a2, float b2, float b3);
     float distanceFromPoint(float x, float y) const;
+    bool getCounterPoint(float, float, float *, float *) const;
     float length() const;
 
     Point getP1() const;

@@ -33,7 +33,6 @@ public slots:
     void drawLine();
     void dlt();
     void pan();
-    void textChanged(QString string);
 
 public:
     explicit MainWindow(QWidget *parent = 0);

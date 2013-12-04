@@ -26,6 +26,7 @@ public:
     void deHighlightMe();
     void clear();
     void resizeTo(float x, float y);
+    void set(Element * e, float x, float y);
     Element *getElement();
 
     Point getOrigin() const;

@@ -105,6 +105,12 @@ void Point::paintPoint(float x, float y)
 }
 
 
+float Point::distance(float x, float y) const
+{
+    float dx = x - this->x;
+    float dy = y - this->y;
+    return sqrt((dx*dx) + (dy*dy));
+}
 
 
 

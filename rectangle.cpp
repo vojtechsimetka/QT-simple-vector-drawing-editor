@@ -19,8 +19,9 @@
  * @param h Rectangle's height
  */
 Rectangle::Rectangle(float x1, float y1, float x2, float y2)
-    :p1(x1,y1),
-     p2(x2,y2)
+    : Element(ElementType::RECTANGLE)
+    , p1(x1,y1)
+    , p2(x2,y2)
 {
 }
 
@@ -112,12 +113,18 @@ void Rectangle::setP2(const Point &value)
     p2 = value;
 }
 
-bool Rectangle::intersects(float min_x, float min_y, float max_x, float max_y) const
+bool Rectangle::intersects(float, float, float, float) const
 {
     return false;
 }
 
-bool Rectangle::intersects(Point p) const
+bool Rectangle::intersects(Point ) const
+{
+    return false;
+}
+
+
+bool Rectangle::getCounterPoint(float , float , float *, float *) const
 {
     return false;
 }

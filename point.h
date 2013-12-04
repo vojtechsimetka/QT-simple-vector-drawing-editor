@@ -22,6 +22,7 @@ public:
     void setLocation(float x, float y);
     static void paintPoint(Point p);
     static void paintPoint(float x, float y);
+    float distance(float x, float y) const;
 
 private:
     float x;

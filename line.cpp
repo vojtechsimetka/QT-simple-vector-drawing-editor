@@ -20,8 +20,9 @@
  * @param y2 Second point's coordinate y
  */
 Line::Line(float x1, float y1, float x2, float y2)
-    : p1(x1,y1),
-      p2(x2,y2)
+    : Element(ElementType::LINE)
+    , p1(x1,y1)
+    , p2(x2,y2)
 {
 }
 
@@ -236,15 +237,34 @@ float Line::distanceFromPoint(float x, float y) const
     return sqrt(pow(x - pomx,2.) + pow(y - pomy,2.));
 }
 
-bool Line::lineIntersection(float a1, float b1, float c1, float a2, float b2, float b3)
+bool Line::lineIntersection(float, float, float, float, float, float)
 {
-
+    return false;
 }
 
  bool Line::intersects(Point p) const
  {
      if (this->distanceFromPoint(p.getX(), p.getY()) < OpenGLWidget::treshold_value)
          return true;
+     return false;
+ }
+
+bool Line::getCounterPoint(float x, float y, float * ox, float * oy) const
+ {
+     if (this->p1.distance(x,y) < 3*OpenGLWidget::treshold_value)
+     {
+         *ox = p2.getX();
+         *oy = p2.getY();
+         return true;
+     }
+
+     else if (this->p2.distance(x,y) < 3*OpenGLWidget::treshold_value)
+     {
+         *ox = p1.getX();
+         *oy = p1.getY();
+         return true;
+     }
+
      return false;
  }
 

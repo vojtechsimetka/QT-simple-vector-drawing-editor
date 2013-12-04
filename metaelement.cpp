@@ -114,3 +114,10 @@ Point MetaElement::getOrigin() const
     return origin;
 }
 
+
+void MetaElement::set(Element * e, float x, float y)
+{
+    this->element = e;
+    this->origin.setLocation(x,y);
+}
+

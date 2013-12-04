@@ -13,23 +13,38 @@
 
 #include "point.h"
 
+namespace ElementType
+{
+    typedef enum
+    {
+        POLYGON,
+        CIRCLE,
+        LINE,
+        RECTANGLE
+    } Type;
+}
+
 class Element
 {
 public:
-    Element();
+    Element(ElementType::Type type);
     virtual void paintMe() const = 0;
     virtual void paintPoints() const = 0;
     virtual void resize(float x1, float y1, float x2, float y2) = 0;
     virtual bool intersects(float min_x, float min_y, float max_x, float max_y) const = 0;
     virtual bool intersects(Point) const = 0;
+    virtual bool getCounterPoint(float, float, float *, float *) const = 0;
     void highlightMe();
     void deHighlightMe();
     void selectMe();
     void deSelectMe();
+    bool isSelected() const;
+    ElementType::Type getType() const;
 
 protected:
     bool highlighted;
     bool selected;
+    const ElementType::Type type;
 };
 
 #endif // ELEMENT_H

@@ -24,8 +24,9 @@ public:
     void paintMe() const;
     void paintPoints() const;
     void resize(float x1, float y1, float x2, float y2);
-    bool intersects(float min_x, float min_y, float max_x, float max_y) const;
+    bool intersects(float, float, float, float) const;
     bool intersects(Point) const;
+    bool getCounterPoint(float, float, float *, float *) const;
 
     Point getP1() const;
     void setP1(const Point &value);

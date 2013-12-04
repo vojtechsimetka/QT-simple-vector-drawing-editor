@@ -31,6 +31,7 @@ public:
     bool intersects(float x, float y);
     bool intersects(const Line *l);
     bool intersects(const Element *l);
+    bool isActive() const;
 
 private:
     float min_x;
