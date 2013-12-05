@@ -414,6 +414,7 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
 
     case Qt::Key_Enter:
     case Qt::Key_Q:
+        this->catchStatus = FIXEDLENGTH;
         this->setAction(ElementType::LINE);
         this->changeLength(MainWindow::lineEdit->text().toFloat());
         break;
@@ -423,6 +424,13 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
         {
             this->setAction(ElementType::LINE);
             MainWindow::lineEdit->setText(QString::number(len));
+        }
+        else
+        {
+            this->data->deHighlightAll();
+            this->vertical_guideline->invalidate();
+            this->horizontal_guideline->invalidate();
+            this->catchStatus = CLASSIC;
         }
         break;
 
@@ -537,7 +545,15 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                 break;
             }
 
-            if (this->status != CHANGESIZE)
+            if (this->catchStatus == FIXEDLENGTH)
+            {
+                float len = MainWindow::lineEdit->text().toFloat();
+                // Resizes element (change direction)
+                this->changeLengthNotMoveMouse(len, this->metaElement.getOrigin().getX(),
+                                               this->metaElement.getOrigin().getY(), &x, &y);
+                this->metaElement.resizeTo(x,y);
+            }
+            else if (this->status != CHANGESIZE)
             {
                 // Resizes element
                 this->metaElement.resizeTo(x,y);
@@ -584,6 +600,72 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 
     // Repaint scene
     this->repaint();
+}
+
+/**
+ * @brief Change line's direction and set specified length
+ * @param k New direction
+ * @param len Line's length
+ * @param x1 Line's first coordinate x
+ * @param y1 Line's first coordinate y
+ * @param x2 Line's second coordinate x
+ * @param y2 Line's second coordinate y
+ */
+void OpenGLWidget::changeLengthNotMoveMouse(float len, float x1, float y1, float *x2, float *y2)
+{
+    if (len < 1)
+        return;
+
+    // Straight lines
+    if (y1 == *y2)
+    {
+        if (*x2 >= x1)
+            *x2 = x1 + len;
+        else *x2 = x1 - len;
+        return;
+    }
+    else if (x1 == *x2)
+    {
+        if (*y2 >= y1)
+            *y2 = y1 + len;
+        else *y2 = y1 - len;
+        return;
+    }
+
+    // Direction
+    float k = fabs((*y2 - y1) / (*x2 - x1));
+
+    // count dinstance for x2,y2 from start point
+    float dx = sqrt(pow(len,2.) / (pow(k,2.) + 1));
+    float dy = k * dx;
+
+    // 1st quadrant
+    if ((*x2 > x1) && (*y2 >= y1))
+    {
+        *x2 = x1 + dx;
+        *y2 = y1 + dy;
+    }
+
+    // 2nd quadrant
+    else if ((*x2 <= x1) && (*y2 > y1))
+    {
+        *x2 = x1 - dx;
+        *y2 = y1 + dy;
+    }
+
+    // 3rd quadrant
+    else if ((*x2 < x1) && (*y2 < y1))
+    {
+        *x2 = x1 - dx;
+        *y2 = y1 - dy;
+    }
+
+    // 4th quadrant
+    else if ((*x2 > x1) && (*y2 < y1))
+    {
+        *x2 = x1 + dx;
+        *y2 = y1 - dy;
+    }
 }
 
 /**
@@ -868,13 +950,12 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         float y2 = e->getP2().getY();
 
 
-
         // Close to line's first x coordinate
         if (fabs(x1 - *x) < this->treshold_value)
         {
             // No line currently painting
             if ((this->metaElement.isEmpty())
-                    || (*x == x1))
+                    || ((*x - x1) < 2))
             {
                 *x = x1;
             }
@@ -896,7 +977,7 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         {
             // No line currently painting
             if ((this->metaElement.isEmpty())
-                    || (*x == x2))
+                    || ((*x - x2) < 2))
             {
                 *x = x2;
             }
@@ -1239,29 +1320,55 @@ void OpenGLWidget::mouseMoveDraw(float *x, float *y)
     float x1 = this->metaElement.getOrigin().getX();
     float y1 = this->metaElement.getOrigin().getY();
 
-    if (this->isHorizontal(y1,*y))
-        *y = y1;
-    // Check if painted line is almost vertical
-    else if (this->isVertical(x1,*x))
-        *x = x1;
-    // Check if painted line is almost diagonal
-    else (this->catchToDiagonal(x, y, x1, y1));
-
-    switch (this->catchStatus)
+    // Catch only to x and y axes
+    // Don't change line's length
+    if (this->catchStatus == FIXEDLENGTH)
     {
-    case CLASSIC:
-        // Try to catch point to another very close point
-        catchToClosePoint(x,y);
-        break;
-    case PARALLEL:
-        catchToParallelLine(x1,y1,x,y);
-        break;
-    case PERPENDICULAR:
-        catchToPerpendicular(x1,y1,x,y);
-        break;
-    case MIDDLE:
-        catchToMiddleOfLine(x,y);
-        break;
+        if (isHorizontal(y1, *y))
+        {
+            float len = sqrt(pow(*x-x1,2.) + pow(*y-y1,2.));
+            *y = y1;
+            if (*x > x1)
+                *x = x1 + len;
+            else *x = x1 - len;
+        }
+        else if (isVertical(x1, *x))
+        {
+            float len = sqrt(pow(*x-x1,2.) + pow(*y-y1,2.));
+            *x = x1;
+            if (*y > y1)
+                *y = y1 + len;
+            else *y = y1 - len;
+        }
+    }
+    // Catch to point / parallel line / perendicular line
+    // May change line's length
+    else
+    {
+        if (this->isHorizontal(y1,*y))
+            *y = y1;
+        // Check if painted line is almost vertical
+        else if (this->isVertical(x1,*x))
+            *x = x1;
+        // Check if painted line is almost diagonal
+        else (this->catchToDiagonal(x, y, x1, y1));
+
+        switch (this->catchStatus)
+        {
+        case CLASSIC:
+            // Try to catch point to another very close point
+            catchToClosePoint(x,y);
+            break;
+        case PARALLEL:
+            catchToParallelLine(x1,y1,x,y);
+            break;
+        case PERPENDICULAR:
+            catchToPerpendicular(x1,y1,x,y);
+            break;
+        case MIDDLE:
+            catchToMiddleOfLine(x,y);
+            break;
+        }
     }
 }
 

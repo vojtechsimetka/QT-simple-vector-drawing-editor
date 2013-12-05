@@ -43,7 +43,8 @@ typedef enum
     CLASSIC,
     PARALLEL,
     PERPENDICULAR,
-    MIDDLE
+    MIDDLE,
+    FIXEDLENGTH
 } CatchStatus;
 
 class OpenGLWidget : public QGLWidget
@@ -56,7 +57,6 @@ public:
     void setAction(Status s);
     void setAction(ElementType::Type t);
     void deleteSelection();
-    void changeLength(float length);
     Element *topObjectAtMousePosition();
     static float treshold_value;
 
@@ -84,6 +84,8 @@ private:
     bool catchToDiagonal(float *x1, float *y1, float x2, float y2);
     void catchToClosePoint(float *x, float *y);
     void catchToMiddleOfLine(float *x, float *y);
+    void changeLengthNotMoveMouse(float len, float x1, float y1, float *x2, float *y2);
+    void changeLength(float length);
     void mouseReleaseDraw(float x, float y);
     void createNewElement(float x, float y);
     QString qKeyEventToQString(QKeyEvent *keyEvent);
