@@ -81,10 +81,13 @@ void SelectionRectangle::paintMe() const
  */
 void SelectionRectangle::paintPoints() const
 {
+}
+void SelectionRectangle::paintBoundingRectangle(float x, float y) const
+{
     if (this->valid_bounding_rectangle)
     {
         this->bounding_rectangle->paintMe();
-        this->bounding_rectangle->paintPoints();
+        this->bounding_rectangle->paintPoints(x,y);
 
         foreach (Element *e, this->selected_items)
             e->paintMe();
@@ -119,7 +122,6 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
 
     float scale_x = (ox - x)/(this->maxx -this->minx);
     float scale_y = (oy - y)/(this->maxy -this->miny);
-    float t_min_x, t_min_y, t_max_x, t_max_y;
     Element *e = NULL;
 
     switch(this->orientation)
@@ -128,55 +130,34 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
 
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
-            t_min_x = this->list_of_points[i]   * scale_x;// - this->list_of_points[i];
-            t_min_y = this->list_of_points[i+1] * scale_y;// - this->list_of_points[i+1];
-            t_max_x = this->list_of_points[i+2] * scale_x;// - this->list_of_points[i+2];
-            t_max_y = this->list_of_points[i+3] * scale_y;// - this->list_of_points[i+3];
-
             e = this->selected_items.at(i/4);
-            e->resizeToBoundingRectangle(this->maxx - t_min_x,
-                                         this->maxy - t_min_y,
-                                         this->maxx - t_max_x,
-                                         this->maxy - t_max_y);
 
-            qDebug() << this->maxx + t_min_x
-                     << this->maxy + t_min_y
-                     << this->maxx - t_max_x
-                     << this->maxy - t_max_y
-                     << scale_x
-                     << scale_y;
+            e->resizeToBoundingRectangle(this->maxx - this->list_of_points[i]   * scale_x,
+                                         this->maxy - this->list_of_points[i+1] * scale_y,
+                                         this->maxx - this->list_of_points[i+2] * scale_x,
+                                         this->maxy - this->list_of_points[i+3] * scale_y);
         }
         break;
 
     case Qt::BottomRightCorner:
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
-            t_min_x = this->list_of_points[i]   * scale_x;
-            t_min_y = this->list_of_points[i+1] * scale_y;
-            t_max_x = this->list_of_points[i+2] * scale_x;
-            t_max_y = this->list_of_points[i+3] * scale_y;
-
             e = this->selected_items.at(i/4);
-            e->resizeToBoundingRectangle(this->minx - t_min_x,
-                                         this->miny - t_min_y,
-                                         this->minx - t_max_x,
-                                         this->miny - t_max_y);
+            e->resizeToBoundingRectangle(this->minx - this->list_of_points[i]   * scale_x,
+                                         this->miny - this->list_of_points[i+1] * scale_y,
+                                         this->minx - this->list_of_points[i+2] * scale_x,
+                                         this->miny - this->list_of_points[i+3] * scale_y);
         }
         break;
 
     case Qt::TopRightCorner:
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
-            t_min_x = this->list_of_points[i]   * scale_x;
-            t_min_y = this->list_of_points[i+1] * scale_y;
-            t_max_x = this->list_of_points[i+2] * scale_x;
-            t_max_y = this->list_of_points[i+3] * scale_y;
-
             e = this->selected_items.at(i/4);
-            e->resizeToBoundingRectangle(this->minx - t_min_x,
-                                         this->maxy - t_min_y,
-                                         this->minx - t_max_x,
-                                         this->maxy - t_max_y);
+            e->resizeToBoundingRectangle(this->minx - this->list_of_points[i]   * scale_x,
+                                         this->maxy - this->list_of_points[i+1] * scale_y,
+                                         this->minx - this->list_of_points[i+2] * scale_x,
+                                         this->maxy - this->list_of_points[i+3] * scale_y);
         }
         break;
 
@@ -184,16 +165,11 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
 
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
-            t_min_x = this->list_of_points[i]   * scale_x;
-            t_min_y = this->list_of_points[i+1] * scale_y;
-            t_max_x = this->list_of_points[i+2] * scale_x;
-            t_max_y = this->list_of_points[i+3] * scale_y;
-
             e = this->selected_items.at(i/4);
-            e->resizeToBoundingRectangle(this->maxx - t_min_x,
-                                         this->miny - t_min_y,
-                                         this->maxx - t_max_x,
-                                         this->miny - t_max_y);
+            e->resizeToBoundingRectangle(this->maxx - this->list_of_points[i]   * scale_x,
+                                         this->miny - this->list_of_points[i+1] * scale_y,
+                                         this->maxx - this->list_of_points[i+2] * scale_x,
+                                         this->miny - this->list_of_points[i+3] * scale_y);
         }
         break;
 
@@ -349,17 +325,17 @@ void SelectionRectangle::calculateBoundingRectangle()
 
 bool SelectionRectangle::intersects(float, float, float, float) const
 {
-    throw new QString("The function intersects in Selection shouldn't be ever used");
+    throw QString("The function intersects in Selection shouldn't be ever used");
     return false;
 }
 bool SelectionRectangle::intersects(Point) const
 {
-    throw new QString("The function intersects in Selection shouldn't be ever used");
+    throw QString("The function intersects in Selection shouldn't be ever used");
     return false;
 }
-bool SelectionRectangle::getCounterPoint(float x, float y, float *ox, float *oy) const
+bool SelectionRectangle::getCounterPoint(float, float, float *, float *) const
 {
-    throw new QString("The function getCounterPoint in Selection shouldn't be ever used");
+    throw QString("The function getCounterPoint in Selection shouldn't be ever used");
     return false;
 }
 

@@ -33,13 +33,14 @@ public:
     void resize(float x1, float y1, float x2, float y2);
     bool intersects(float min_x, float min_y, float max_x, float max_y) const;
     bool intersects(Point) const;
-    bool getCounterPoint(float, float, float *, float *) const;
+    bool getCounterPoint(float, float, float*, float*) const;
     float getMinX() const;
     float getMinY() const;
     float getMaxX() const;
     float getMaxY() const;
     void  resizeToBoundingRectangle(float, float, float, float);
 
+    void paintBoundingRectangle(float, float) const;
     void resize(float, float, float, float, const Point offset, float scale);
     bool getCounterPointAndCalculatePoints(float x, float y, float *ox, float *oy);
     void deactivate();

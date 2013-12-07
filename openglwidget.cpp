@@ -107,8 +107,8 @@ void OpenGLWidget::paintGL()
     this->vertical_guideline->paintMe();
     this->horizontal_guideline->paintMe();
 
-    // Draws selection rectangle
-    this->selection->paintPoints();
+    this->selection->paintBoundingRectangle(this->translateX(this->mouse_end_position.getX()),
+                                            this->translateY(this->mouse_end_position.getY()));
 
     // Restores matrix context
     glPopMatrix();
@@ -245,6 +245,10 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
             // Starts new element from same coordinates where we've finnished
             this->createNewElement(x, y);
             break;
+
+        case ElementType::SELECTION_RECTANGLE:
+            throw QString("There shall never be instance of selection rectangle as a drawable object");
+            break;
         }
 
     }
@@ -273,6 +277,9 @@ void OpenGLWidget::createNewElement(float x, float y)
         break;
 
     case ElementType::POLYGON:
+        break;
+    case ElementType::SELECTION_RECTANGLE:
+        throw QString("There shall never be instance of selection rectangle as a drawable object");
         break;
     }
 
@@ -1212,7 +1219,6 @@ void OpenGLWidget::changeLength(float length)
     }
 
     l->resize(x1,y1,x2,y2);
-    //qDebug() << "x2:" << x1 << " y: " << y1 << " x: " << x2 << " y: " << y2;
 
     x2 = x2 * this->scale + this->offset.getX();
     y2 = y2 * this->scale + this->offset.getY();
@@ -1274,7 +1280,8 @@ void OpenGLWidget::mouseReleaseSelect()
     }
     else if (this->metaElement.getElement() == this->selection)
     {
-        this->data->add(this->metaElement.getElement());
+        foreach (Element *e, this->selection->getSelectedItems())
+            this->data->add(e);
         this->metaElement.clear();
         this->selection->finalizeResize();
 
@@ -1321,11 +1328,11 @@ void OpenGLWidget::mousePressSelect()
 
         // Starts displaying selection rectangle
         this->selection->resize(this->mouse_start_position.getX(),
-                               this->mouse_start_position.getY(),
-                               this->mouse_end_position.getX(),
-                               this->mouse_end_position.getY(),
-                               this->offset,
-                               this->scale);
+                                this->mouse_start_position.getY(),
+                                this->mouse_end_position.getX(),
+                                this->mouse_end_position.getY(),
+                                this->offset,
+                                this->scale);
     }
     else
     {
@@ -1341,9 +1348,6 @@ void OpenGLWidget::mousePressSelect()
             this->selection->addBack(object);
             this->selection->deactivate();
         }
-
-        // Some elements are being dragged
-        this->items_being_dragged = true;
     }
 }
 

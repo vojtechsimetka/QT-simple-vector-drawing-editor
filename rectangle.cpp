@@ -68,12 +68,12 @@ void Rectangle::paintMe() const
 /**
  * @brief Paints points of the rectangle
  */
-void Rectangle::paintPoints() const
+void Rectangle::paintPoints(float x, float y) const
 {
-    Point::paintPoint(this->p1);
-    Point::paintPoint(this->p2);
-    Point::paintPoint(this->p3);
-    Point::paintPoint(this->p4);
+    Point::paintPoint(this->p1, x,y);
+    Point::paintPoint(this->p2, x,y);
+    Point::paintPoint(this->p3, x,y);
+    Point::paintPoint(this->p4, x,y);
 }
 
 /**

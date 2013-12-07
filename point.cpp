@@ -90,7 +90,7 @@ void Point::paintPoint(float x, float y)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Sets size
-    glPointSize(7);
+    glPointSize(MINDISTANCE);
 
     // Sets color
     glColor4f(0.5, 0.75, 0.95, 0.8);
@@ -98,6 +98,43 @@ void Point::paintPoint(float x, float y)
     // Draws primitive
     glBegin(GL_POINTS);
     glVertex2f(x, y);
+    glEnd();
+
+    // Disables blending
+    glDisable(GL_BLEND);
+}
+
+/**
+ * @brief Paints point with coordinates x and y
+ * @param x Coordinate x of painted point
+ * @param y Coordinate y of painted point
+ */
+void Point::paintPoint(Point p, float x, float y)
+{
+    // Enables and sets blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    if (isNearby(p.getX(), p.getY(), x, y))
+    {
+        // Sets size
+        glPointSize(2*MINDISTANCE);
+
+        // Sets color
+        glColor4f(0.5, 0.75, 0.95, 1);
+    }
+    else
+    {
+        // Sets size
+        glPointSize(MINDISTANCE);
+
+        // Sets color
+        glColor4f(0.5, 0.75, 0.95, 0.8);
+    }
+
+    // Draws primitive
+    glBegin(GL_POINTS);
+    glVertex2f(p.getX(), p.getY());
     glEnd();
 
     // Disables blending
@@ -121,5 +158,5 @@ float Point::distance(float x1, float y1, float x2, float y2)
 
 bool Point::isNearby(float x1, float y1, float x2, float y2)
 {
-    return Point::distance(x1, y1, x2, y2) < 3*OpenGLWidget::treshold_value;
+    return Point::distance(x1, y1, x2, y2) < OpenGLWidget::treshold_value;
 }
