@@ -74,17 +74,22 @@ void SelectionRectangle::paintMe() const
         glVertex2f(this->min_x, this->min_y);
         glEnd();
     }
-    else if (this->valid_bounding_rectangle)
-    {
-        this->bounding_rectangle->paintMe();
-        this->bounding_rectangle->paintPoints();
-    }
 }
 
 /**
  * @brief Does not have any meaning, just required redefinishion...
  */
-void SelectionRectangle::paintPoints() const {}
+void SelectionRectangle::paintPoints() const
+{
+    if (this->valid_bounding_rectangle)
+    {
+        this->bounding_rectangle->paintMe();
+        this->bounding_rectangle->paintPoints();
+
+        foreach (Element *e, this->selected_items)
+            e->paintMe();
+    }
+}
 
 /**
  * @brief Resizes and activates selection rectangle from diagonal
@@ -112,34 +117,86 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
 {
     this->bounding_rectangle->resize(ox,oy,x,y);
 
-    float scale_x, scale_y, t_min_x, t_min_y, t_max_x, t_max_y;
+    float scale_x = (ox - x)/(this->maxx -this->minx);
+    float scale_y = (oy - y)/(this->maxy -this->miny);
+    float t_min_x, t_min_y, t_max_x, t_max_y;
     Element *e = NULL;
 
     switch(this->orientation)
     {
     case Qt::TopLeftCorner:
-        scale_x = (ox - x)/(this->maxx -this->minx);
-        scale_y = (oy - y)/(this->maxy -this->miny);
 
-        for (int i = 0; i < this->selected_items.size()*2; i+=2)
+        for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
-            t_min_x = this->list_of_points[i]   * scale_x - this->list_of_points[i];
-            t_min_y = this->list_of_points[i+1] * scale_y - this->list_of_points[i+1];
+            t_min_x = this->list_of_points[i]   * scale_x;// - this->list_of_points[i];
+            t_min_y = this->list_of_points[i+1] * scale_y;// - this->list_of_points[i+1];
+            t_max_x = this->list_of_points[i+2] * scale_x;// - this->list_of_points[i+2];
+            t_max_y = this->list_of_points[i+3] * scale_y;// - this->list_of_points[i+3];
 
-            e = this->selected_items.at(i/2);
-            e->setScaleAndTranslation(scale_x,
-                                      scale_y,
-                                      0,//t_min_x,
-                                      0//t_min_y
-                                      );
+            e = this->selected_items.at(i/4);
+            e->resizeToBoundingRectangle(this->maxx - t_min_x,
+                                         this->maxy - t_min_y,
+                                         this->maxx - t_max_x,
+                                         this->maxy - t_max_y);
 
-            qDebug() << t_min_x
-                     << t_min_y
+            qDebug() << this->maxx + t_min_x
+                     << this->maxy + t_min_y
+                     << this->maxx - t_max_x
+                     << this->maxy - t_max_y
                      << scale_x
                      << scale_y;
         }
-
         break;
+
+    case Qt::BottomRightCorner:
+        for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
+        {
+            t_min_x = this->list_of_points[i]   * scale_x;
+            t_min_y = this->list_of_points[i+1] * scale_y;
+            t_max_x = this->list_of_points[i+2] * scale_x;
+            t_max_y = this->list_of_points[i+3] * scale_y;
+
+            e = this->selected_items.at(i/4);
+            e->resizeToBoundingRectangle(this->minx - t_min_x,
+                                         this->miny - t_min_y,
+                                         this->minx - t_max_x,
+                                         this->miny - t_max_y);
+        }
+        break;
+
+    case Qt::TopRightCorner:
+        for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
+        {
+            t_min_x = this->list_of_points[i]   * scale_x;
+            t_min_y = this->list_of_points[i+1] * scale_y;
+            t_max_x = this->list_of_points[i+2] * scale_x;
+            t_max_y = this->list_of_points[i+3] * scale_y;
+
+            e = this->selected_items.at(i/4);
+            e->resizeToBoundingRectangle(this->minx - t_min_x,
+                                         this->maxy - t_min_y,
+                                         this->minx - t_max_x,
+                                         this->maxy - t_max_y);
+        }
+        break;
+
+    case Qt::BottomLeftCorner:
+
+        for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
+        {
+            t_min_x = this->list_of_points[i]   * scale_x;
+            t_min_y = this->list_of_points[i+1] * scale_y;
+            t_max_x = this->list_of_points[i+2] * scale_x;
+            t_max_y = this->list_of_points[i+3] * scale_y;
+
+            e = this->selected_items.at(i/4);
+            e->resizeToBoundingRectangle(this->maxx - t_min_x,
+                                         this->miny - t_min_y,
+                                         this->maxx - t_max_x,
+                                         this->miny - t_max_y);
+        }
+        break;
+
     }
 }
 
@@ -312,14 +369,48 @@ bool SelectionRectangle::getCounterPointAndCalculatePoints(float x, float y, flo
     {
         this->list_of_points.clear();
 
-        foreach (Element *e, this->selected_items)
+
+        switch(this->orientation)
         {
-            switch(this->orientation)
+        case Qt::TopLeftCorner:
+            foreach (Element *e, this->selected_items)
             {
-            case Qt::TopLeftCorner:
+                this->list_of_points.push_back(this->maxx - e->getMinX());
+                this->list_of_points.push_back(this->maxy - e->getMinY());
+                this->list_of_points.push_back(e->getMaxX() - this->maxx);
+                this->list_of_points.push_back(e->getMaxY() - this->maxy);
+            }
+            break;
+
+        case Qt::BottomRightCorner:
+            foreach (Element *e, this->selected_items)
+            {
                 this->list_of_points.push_back(e->getMinX() - this->minx);
                 this->list_of_points.push_back(e->getMinY() - this->miny);
+                this->list_of_points.push_back(e->getMaxX() - this->minx);
+                this->list_of_points.push_back(e->getMaxY() - this->miny);
             }
+            break;
+
+        case Qt::TopRightCorner:
+            foreach (Element *e, this->selected_items)
+            {
+                this->list_of_points.push_back(e->getMinX() - this->minx);
+                this->list_of_points.push_back(this->maxy - e->getMinY());
+                this->list_of_points.push_back(e->getMaxX() - this->minx);
+                this->list_of_points.push_back(this->maxy - e->getMaxY());
+            }
+            break;
+
+        case Qt::BottomLeftCorner:
+            foreach (Element *e, this->selected_items)
+            {
+                this->list_of_points.push_back(this->maxx - e->getMinX());
+                this->list_of_points.push_back(e->getMinY() - this->miny);
+                this->list_of_points.push_back(this->maxx - e->getMaxX());
+                this->list_of_points.push_back(e->getMaxY() - this->miny);
+            }
+            break;
         }
 
         return true;
@@ -342,4 +433,16 @@ float SelectionRectangle::getMaxX() const
 float SelectionRectangle::getMaxY() const
 {
 
+}
+void SelectionRectangle::resizeToBoundingRectangle(float, float, float, float)
+{
+
+}
+
+void SelectionRectangle::finalizeResize()
+{
+    foreach (Element *e, this->selected_items)
+        e->finalizeResize();
+
+    this->calculateBoundingRectangle();
 }

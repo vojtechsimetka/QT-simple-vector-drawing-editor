@@ -38,6 +38,7 @@ public:
     float getMinY() const;
     float getMaxX() const;
     float getMaxY() const;
+    void  resizeToBoundingRectangle(float, float, float, float);
 
     void resize(float, float, float, float, const Point offset, float scale);
     bool getCounterPointAndCalculatePoints(float x, float y, float *ox, float *oy);
@@ -54,6 +55,7 @@ public:
     void clear();
     void addBack(Element *e);
     bool contains(Element *e) const;
+    void finalizeResize();
 
 private:
     float min_x;

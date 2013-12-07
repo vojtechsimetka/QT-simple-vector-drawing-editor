@@ -107,6 +107,9 @@ void OpenGLWidget::paintGL()
     this->vertical_guideline->paintMe();
     this->horizontal_guideline->paintMe();
 
+    // Draws selection rectangle
+    this->selection->paintPoints();
+
     // Restores matrix context
     glPopMatrix();
 
@@ -179,7 +182,15 @@ void OpenGLWidget::mousePressEvent(QMouseEvent *event)
         switch(this->status)
         {
         case SELECT_E:
+            try
+            {
             this->mousePressSelect();
+            }
+            catch (QString* str)
+            {
+                qDebug()<<*str;
+            }
+
             break;
 
         default:
@@ -1261,10 +1272,11 @@ void OpenGLWidget::mouseReleaseSelect()
         // Deactivates selection rectangle
         this->selection->deactivate();
     }
-    else if (!this->metaElement.isEmpty())
+    else if (this->metaElement.getElement() == this->selection)
     {
         this->data->add(this->metaElement.getElement());
         this->metaElement.clear();
+        this->selection->finalizeResize();
 
         // Dehighlight all elements
         this->data->deHighlightAll();
@@ -1288,7 +1300,13 @@ void OpenGLWidget::mousePressSelect()
                                                            &origin_x,
                                                            &origin_y))
     {
+        // Sets selection as an element being resized
         this->metaElement.set(this->selection, origin_x, origin_y);
+
+        // Removes elements from data structure
+        foreach (Element *e, this->selection->getSelectedItems())
+            this->data->remove(e);
+
         return;
     }
 
@@ -1311,24 +1329,6 @@ void OpenGLWidget::mousePressSelect()
     }
     else
     {
-        // Object already was selected, attempt to resize it
-//        if (object->isSelected())
-//        {
-//            float origin_x;
-//            float origin_y;
-
-//            // Gets counter point for point that is being resized point
-//            if (object->getCounterPoint(this->translateX(this->mouse_end_position.getX()),
-//                                        this->translateY(this->mouse_end_position.getY()),
-//                                        &origin_x,
-//                                        &origin_y))
-//            {
-//                this->metaElement.set(object, origin_x, origin_y);
-//                this->data->remove(object);
-//                return;
-//            }
-//        }
-
         // Selection contains object, move objects
         if (selection->contains(object))
             this->items_being_dragged = true;

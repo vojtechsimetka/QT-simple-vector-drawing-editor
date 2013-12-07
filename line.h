@@ -31,11 +31,13 @@ public:
     bool intersects(Line *l) const;
     float distanceFromPoint(float x, float y) const;
     bool getCounterPoint(float, float, float *, float *) const;
+    void  resizeToBoundingRectangle(float, float, float, float);
     float length() const;
     float getMinX() const;
     float getMinY() const;
     float getMaxX() const;
     float getMaxY() const;
+    void finalizeResize();
 
     Point getP1() const;
     void setP1(float x, float y);
@@ -46,6 +48,8 @@ public:
 private:
     Point p1;
     Point p2;
+    Point o_p1;
+    Point o_p2;
 
     int orientation(Point, Point, Point) const;
     bool onSegment(Point p1, Point q, Point p2) const;

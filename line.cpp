@@ -23,6 +23,8 @@ Line::Line(float x1, float y1, float x2, float y2)
     : Element(ElementType::LINE)
     , p1(x1,y1)
     , p2(x2,y2)
+    , o_p1(x1,y1)
+    , o_p2(x2,y2)
 {
 }
 
@@ -36,16 +38,6 @@ Line::~Line()
  */
 void Line::paintMe() const
 {
-    // Saves matrix
-    glPushMatrix();
-
-    // Translates scene by offset
-    glTranslatef(this->offset_x,
-                 this->offset_y,
-                 0);
-
-    glScalef(this->scale_x, this->scale_y, 1);
-
     // Line is selected, paint blue line around
     if (this->selected)
     {
@@ -84,8 +76,6 @@ void Line::paintMe() const
     glEnd();
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_BLEND);
-
-    glPopMatrix();
 }
 
 /**
@@ -110,6 +100,11 @@ void Line::resize(float x1, float y1, float x2, float y2)
     this->p1.setY(y1);
     this->p2.setX(x2);
     this->p2.setY(y2);
+
+    this->o_p1.setX(x1);
+    this->o_p1.setY(y1);
+    this->o_p2.setX(x2);
+    this->o_p2.setY(y2);
 }
 
 /**
@@ -129,6 +124,7 @@ Point Line::getP1() const
 void Line::setP1(float x, float y)
 {
     this->p1.setLocation(x, y);
+    this->o_p1.setLocation(x, y);
 }
 
 /**
@@ -148,6 +144,7 @@ Point Line::getP2() const
 void Line::setP2(float x, float y)
 {
     this->p2.setLocation(x, y);
+    this->o_p2.setLocation(x, y);
 }
 
 /**
@@ -391,4 +388,37 @@ float Line::getMaxX() const
 float Line::getMaxY() const
 {
     return this->p1.getY() > this->p2.getY() ? this->getP1().getY() : this->p2.getY();
+}
+
+void  Line::resizeToBoundingRectangle(float min_x, float min_y, float max_x, float max_y)
+{
+    if (this->o_p1.getX() < this->o_p2.getX())
+    {
+        this->p1.setX(min_x);
+        this->p2.setX(max_x);
+    }
+
+    else
+    {
+        this->p1.setX(max_x);
+        this->p2.setX(min_x);
+    }
+
+    if (this->o_p1.getY() < this->o_p2.getY())
+    {
+        this->p1.setY(min_y);
+        this->p2.setY(max_y);
+    }
+
+    else
+    {
+        this->p1.setY(max_y);
+        this->p2.setY(min_y);
+    }
+}
+
+void Line::finalizeResize()
+{
+    this->o_p1.setLocation(this->p1.getX(), this->p1.getY());
+    this->o_p2.setLocation(this->p2.getX(), this->p2.getY());
 }

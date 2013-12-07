@@ -39,7 +39,8 @@ public:
     virtual float getMinY() const = 0;
     virtual float getMaxX() const = 0;
     virtual float getMaxY() const = 0;
-    void setScaleAndTranslation(float, float, float, float);
+    virtual void  resizeToBoundingRectangle(float, float, float, float) = 0;
+    virtual void finalizeResize() = 0;
     void highlightMe();
     void deHighlightMe();
     void selectMe();
@@ -51,10 +52,6 @@ protected:
     bool highlighted;
     bool selected;
     const ElementType::Type type;
-    float offset_x;
-    float offset_y;
-    float scale_x;
-    float scale_y;
 };
 
 #endif // ELEMENT_H
