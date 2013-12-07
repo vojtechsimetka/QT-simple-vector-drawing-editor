@@ -9,6 +9,7 @@
  * @file    selectionrectangle.cpp
  */
 #include "selectionrectangle.h"
+#include "changeslog.h"
 
 /**
  * @brief SelectionRectangle constructor
@@ -474,6 +475,8 @@ void SelectionRectangle::finishDragging(float x, float y)
 
     foreach (Element *e, this->selected_items)
         e->translatef(x - this->start_x, y - this->start_y);
+
+    ChangesLog::sharedInstance()->doStep(MOVE, x - this->start_x, y - this->start_y, new std::vector<Element *>(this->selected_items));
 
     this->calculateBoundingRectangle();
 }

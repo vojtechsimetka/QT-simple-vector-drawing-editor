@@ -34,10 +34,11 @@ ChangesLog *ChangesLog::sharedInstance()
  * @brief Initializes changeslog
  * @param d Data reference
  */
-void ChangesLog::init(Data *d)
+void ChangesLog::init(Data *d, SelectionRectangle *selection)
 {
-    data = d;
-    lastChange = 0;
+    this->data = d;
+    this->selection = selection;
+    this->lastChange = 0;
 }
 
 /**
@@ -87,12 +88,17 @@ void ChangesLog::undoStep()
         data->remove((Element*)s->object);
         break;
     case DELETE:
-
         list = (std::vector<Element *> *) s->object;
         foreach (Element *e, *list) {
             data->add(e);
         }
-
+        break;
+    case MOVE:
+        list = (std::vector<Element *> *) s->object;
+        foreach (Element *e, *list) {
+            e->translatef(-s->offsetX, -s->offsetY);
+        }
+        this->selection->calculateBoundingRectangle();
         break;
     default:
         break;
@@ -130,7 +136,13 @@ void ChangesLog::redoStep()
         foreach (Element *e, *list) {
             data->remove(e);
         }
-
+        break;
+    case MOVE:
+        list = (std::vector<Element *> *) s->object;
+        foreach (Element *e, *list) {
+            e->translatef(s->offsetX, s->offsetY);
+        }
+        this->selection->calculateBoundingRectangle();
         break;
     default:
         break;

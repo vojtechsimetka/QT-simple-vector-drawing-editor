@@ -38,7 +38,7 @@ OpenGLWidget::OpenGLWidget(Gui *gui, QWidget *parent)
     this->data = new Data();
 
     // Init Changes log
-    ChangesLog::sharedInstance()->init(this->data);
+    ChangesLog::sharedInstance()->init(this->data, this->selection);
 
     // Init dotted line
     this->vertical_guideline = new GuideLine(1,0,0);
@@ -207,7 +207,11 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
 {
     // There isn't any element that is being drawn
     if (this->metaElement.isEmpty())
+    {
         this->createNewElement(x, y);
+        this->gui->setUndo(false);
+        this->gui->setRedo(false);
+    }
 
     // There is element being drawn, finish it
     else
@@ -228,7 +232,6 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
             ChangesLog::sharedInstance()->doStep(ADD,0,0,metaElement.getElement());
 
             // Disables redo and enables undo
-            this->gui->setUndo(true);
             this->gui->setRedo(false);
 
             // Dehighlight all elements
@@ -362,6 +365,8 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
         // Stop with drawing lines
         if (this->status == DRAW && this->type == ElementType::LINE)
         {
+            if (ChangesLog::sharedInstance()->canUndo())
+                this->gui->setUndo(true);
             this->metaElement.clear();
             this->data->deHighlightAll();
             this->vertical_guideline->invalidate();
@@ -434,19 +439,27 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
             this->gui->setLineEditText("");
         }
         // Set new text
-        this->gui->appendTextToLineEdit(this->qKeyEventToQString(keyEvent));
+        if (this->status == CHANGESIZE)
+            this->gui->appendTextToLineEdit(this->qKeyEventToQString(keyEvent));
         break;
 
     case Qt::Key_Enter:
     case Qt::Key_Q:
-        this->catchStatus = FIXEDLENGTH;
-        this->setAction(ElementType::LINE);
-        this->changeLength(this->gui->getLineEditText().toFloat());
+        if (this->status == CHANGESIZE)
+        {
+            this->vertical_guideline->invalidate();
+            this->horizontal_guideline->invalidate();
+
+            this->catchStatus = FIXEDLENGTH;
+            this->setAction(ElementType::LINE);
+            this->changeLength(this->gui->getLineEditText().toFloat());
+        }
         break;
 
     case Qt::Key_Escape:
         if (this->status == CHANGESIZE)
         {
+
             this->setAction(ElementType::LINE);
             this->gui->setLineEditText(QString::number(len));
         }
@@ -573,12 +586,8 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
             {
                 float len = this->gui->getLineEditText().toFloat();
                 // Resizes element (change direction)
-                this->changeLengthNotMoveMouse(len,
-                                               this->metaElement.getOrigin().getX(),
-                                               this->metaElement.getOrigin().getY(),
-                                               &x,
-                                               &y);
                 this->metaElement.resizeTo(x,y);
+                this->changeLength(len);
             }
             else if (this->status != CHANGESIZE)
             {
@@ -989,7 +998,7 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         {
             // No line currently painting
             if ((this->metaElement.isEmpty())
-                    || ((*x - x1) < 2))
+                    || (k == INF))
             {
                 *x = x1;
             }
@@ -1011,7 +1020,7 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         {
             // No line currently painting
             if ((this->metaElement.isEmpty())
-                    || ((*x - x2) < 2))
+                    || (k == INF))
             {
                 *x = x2;
             }
@@ -1032,7 +1041,7 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         {
             // No line currently painting
             if ((this->metaElement.isEmpty())
-                    || (*y == y1)
+                    || (k == 0)
                     || (vertical_guideline->isValid()))
             {
                 *y = y1;
@@ -1054,7 +1063,7 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         {
             // No line currently painting
             if ((this->metaElement.isEmpty())
-                    || (*y == y2)
+                    || (k == 0)
                     || (vertical_guideline->isValid()))
             {
                 *y = y2;
@@ -1162,11 +1171,6 @@ void OpenGLWidget::changeLength(float length)
         else x2 = x1 - length;
 
         l->resize(x1,y1,x2,y2);
-
-        x2 = x2 * this->scale + this->offset.getX();
-        y2 = y2 * this->scale + this->offset.getY();
-        QPoint *mousePos = new QPoint(x2,y2);
-        QCursor::setPos(this->mapToGlobal(*mousePos));
         return;
     }
     else if (x1 == x2)
@@ -1176,11 +1180,6 @@ void OpenGLWidget::changeLength(float length)
         else y2 = y1 - length;
 
         l->resize(x1,y1,x2,y2);
-
-        x2 = x2 * this->scale + this->offset.getX();
-        y2 = y2 * this->scale + this->offset.getY();
-        QPoint *mousePos = new QPoint(x2,y2);
-        QCursor::setPos(this->mapToGlobal(*mousePos));
         return;
     }
 
@@ -1226,11 +1225,6 @@ void OpenGLWidget::changeLength(float length)
     }
 
     l->resize(x1,y1,x2,y2);
-
-    x2 = x2 * this->scale + this->offset.getX();
-    y2 = y2 * this->scale + this->offset.getY();
-    QPoint *mousePos = new QPoint(x2,y2);
-    QCursor::setPos(this->mapToGlobal(*mousePos));
 
     this->repaint();
 }
@@ -1308,6 +1302,7 @@ void OpenGLWidget::mouseReleaseSelect()
     {
         this->selection->finishDragging(this->translateX(this->mouse_end_position.getX()),
                                         this->translateY(this->mouse_end_position.getY()));
+        this->repaint();
     }
 }
 

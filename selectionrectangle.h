@@ -65,6 +65,8 @@ public:
     void finishDragging(float, float);
     void drag(float, float);
 
+    void calculateBoundingRectangle();
+
 private:
     float min_x;
     float min_y;
@@ -85,7 +87,6 @@ private:
     bool valid_bounding_rectangle;
 
     void deselectAll();
-    void calculateBoundingRectangle();
 
     std::vector<float> list_of_points;
     Qt::Corner orientation;

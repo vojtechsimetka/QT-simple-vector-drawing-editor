@@ -12,6 +12,7 @@
 #define CHANGESLOG_H
 
 #include "data.h"
+#include "selectionrectangle.h"
 
 // Actions that can be done
 enum Actions
@@ -39,10 +40,11 @@ private:
     // Pointer behind last change in changes
     int lastChange;
     Data *data;
+    SelectionRectangle *selection;
 
 public:
     static ChangesLog *sharedInstance();
-    void init(Data *d);
+    void init(Data *d, SelectionRectangle *selection);
     void doStep(Actions a, int offsetX, int offsetY, void *object);
     void undoStep();
     bool canUndo();
