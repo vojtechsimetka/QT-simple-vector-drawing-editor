@@ -28,6 +28,7 @@ public:
     void resize(float x1, float y1, float x2, float y2);
     bool intersects(float min_x, float min_y, float max_x, float max_y) const;
     bool intersects(Point) const;
+    bool intersects(float, float) const;
     bool intersects(Line *l) const;
     float distanceFromPoint(float x, float y) const;
     bool getCounterPoint(float, float, float *, float *) const;
@@ -38,6 +39,7 @@ public:
     float getMaxX() const;
     float getMaxY() const;
     void finalizeResize();
+    void translatef(float, float);
 
     Point getP1() const;
     void setP1(float x, float y);

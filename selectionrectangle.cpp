@@ -24,6 +24,7 @@ SelectionRectangle::SelectionRectangle(Gui *gui)
     , bounding_rectangle(new Rectangle(0, 0, 0, 0))
     , valid_bounding_rectangle(false)
     , orientation(Qt::TopLeftCorner)
+    , dragging_items(false)
 {
 }
 
@@ -86,11 +87,21 @@ void SelectionRectangle::paintBoundingRectangle(float x, float y) const
 {
     if (this->valid_bounding_rectangle)
     {
+        // Saves matrix
+        glPushMatrix();
+
+        // Translates scene by offset
+        glTranslatef(this->offset_x,
+                     this->offset_y,
+                     0);
+
         this->bounding_rectangle->paintMe();
         this->bounding_rectangle->paintPoints(x,y);
 
         foreach (Element *e, this->selected_items)
             e->paintMe();
+
+        glPopMatrix();
     }
 }
 
@@ -118,10 +129,25 @@ void SelectionRectangle::resize(float x1, float y1, float x2, float y2, const Po
 
 void SelectionRectangle::resize(float ox, float oy, float x, float y)
 {
-    this->bounding_rectangle->resize(ox,oy,x,y);
-
-    float scale_x = (ox - x)/(this->maxx -this->minx);
-    float scale_y = (oy - y)/(this->maxy -this->miny);
+    float scale_x, scale_y;
+    if (this->minx == this->maxx)
+    {
+        scale_x = 0;
+        scale_y = (oy - y)/(this->maxy -this->miny);
+        this->bounding_rectangle->resize(ox,oy,ox,y);
+    }
+    else if (this->miny == this->maxy)
+    {
+        scale_x = (ox - x)/(this->maxx -this->minx);
+        scale_y = 0;
+        this->bounding_rectangle->resize(ox,oy,x,oy);
+    }
+    else
+    {
+        scale_x = (ox - x)/(this->maxx -this->minx);
+        scale_y = (oy - y)/(this->maxy -this->miny);
+        this->bounding_rectangle->resize(ox,oy,x,y);
+    }
     Element *e = NULL;
 
     switch(this->orientation)
@@ -131,7 +157,6 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
             e = this->selected_items.at(i/4);
-
             e->resizeToBoundingRectangle(this->maxx - this->list_of_points[i]   * scale_x,
                                          this->maxy - this->list_of_points[i+1] * scale_y,
                                          this->maxx - this->list_of_points[i+2] * scale_x,
@@ -333,6 +358,11 @@ bool SelectionRectangle::intersects(Point) const
     throw QString("The function intersects in Selection shouldn't be ever used");
     return false;
 }
+bool SelectionRectangle::intersects(float, float) const
+{
+    throw QString("The function intersects in Selection shouldn't be ever used");
+    return false;
+}
 bool SelectionRectangle::getCounterPoint(float, float, float *, float *) const
 {
     throw QString("The function getCounterPoint in Selection shouldn't be ever used");
@@ -421,4 +451,40 @@ void SelectionRectangle::finalizeResize()
         e->finalizeResize();
 
     this->calculateBoundingRectangle();
+}
+
+void SelectionRectangle::startDragging(float x, float y)
+{
+    this->start_x = x;
+    this->start_y = y;
+    this->dragging_items = true;
+}
+
+bool SelectionRectangle::isDragged() const
+{
+    return this->dragging_items;
+}
+
+void SelectionRectangle::finishDragging(float x, float y)
+{
+    this->offset_x = 0;
+    this->offset_y = 0;
+
+    this->dragging_items = false;
+
+    foreach (Element *e, this->selected_items)
+        e->translatef(x - this->start_x, y - this->start_y);
+
+    this->calculateBoundingRectangle();
+}
+
+void SelectionRectangle::drag(float x, float y)
+{
+    this->offset_x = x - this->start_x;
+    this->offset_y = y - this->start_y;
+}
+
+void SelectionRectangle::translatef(float, float)
+{
+
 }

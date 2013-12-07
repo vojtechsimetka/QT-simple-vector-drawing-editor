@@ -34,6 +34,7 @@ public:
     virtual void resize(float x1, float y1, float x2, float y2) = 0;
     virtual bool intersects(float min_x, float min_y, float max_x, float max_y) const = 0;
     virtual bool intersects(Point) const = 0;
+    virtual bool intersects(float, float) const = 0;
     virtual bool getCounterPoint(float, float, float *, float *) const = 0;
     virtual float getMinX() const = 0;
     virtual float getMinY() const = 0;
@@ -41,12 +42,14 @@ public:
     virtual float getMaxY() const = 0;
     virtual void  resizeToBoundingRectangle(float, float, float, float) = 0;
     virtual void finalizeResize() = 0;
+    virtual void translatef(float, float) = 0;
     void highlightMe();
     void deHighlightMe();
     void selectMe();
     void deSelectMe();
     bool isSelected() const;
     ElementType::Type getType() const;
+    void setOffset(float, float);
 
 protected:
     bool highlighted;

@@ -38,7 +38,7 @@ private:
     QAction *action_undo;
     QAction *action_redo;
     QAction *action_select;
-    QAction *action_rotate;
+//    QAction *action_rotate;
     QAction *action_line;
     QAction *action_delete;
     QAction *action_pan;

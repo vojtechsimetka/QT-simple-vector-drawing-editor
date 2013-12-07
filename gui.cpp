@@ -53,10 +53,10 @@ void Gui::createActions(QMainWindow *MainWindow)
     this->action_select->setText("Select");
     this->action_select->setIcon(QIcon(":/icons/images/left_ptr.png"));
 
-    // Rotate action
-    this->action_rotate = new QAction(MainWindow);
-    this->action_rotate->setText("Rotate");
-    this->action_rotate->setIcon(QIcon(":/icons/images/top_right_corner.png"));
+//    // Rotate action
+//    this->action_rotate = new QAction(MainWindow);
+//    this->action_rotate->setText("Rotate");
+//    this->action_rotate->setIcon(QIcon(":/icons/images/top_right_corner.png"));
 
     // Draw line action
     this->action_line = new QAction(MainWindow);
@@ -91,7 +91,7 @@ void Gui::createToolBar(QMainWindow *MainWindow)
 
     // Adds actions to the toolbar
     this->tool_bar->addAction(this->action_select);
-    this->tool_bar->addAction(this->action_rotate);
+//    this->tool_bar->addAction(this->action_rotate);
     this->tool_bar->addAction(this->action_pan);
     this->tool_bar->addAction(this->action_delete);
     this->tool_bar->addSeparator();
@@ -104,7 +104,7 @@ void Gui::createToolBar(QMainWindow *MainWindow)
     QObject::connect(this->action_undo,   SIGNAL(triggered()), this, SLOT(undo()));
     QObject::connect(this->action_redo,   SIGNAL(triggered()), this, SLOT(redo()));
     QObject::connect(this->action_select, SIGNAL(triggered()), this, SLOT(select()));
-    QObject::connect(this->action_rotate, SIGNAL(triggered()), this, SLOT(rotate()));
+//    QObject::connect(this->action_rotate, SIGNAL(triggered()), this, SLOT(rotate()));
     QObject::connect(this->action_line,   SIGNAL(triggered()), this, SLOT(drawLine()));
     QObject::connect(this->action_delete, SIGNAL(triggered()), this, SLOT(dlt()));
     QObject::connect(this->action_pan,    SIGNAL(triggered()), this, SLOT(pan()));

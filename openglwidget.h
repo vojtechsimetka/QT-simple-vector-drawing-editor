@@ -76,7 +76,6 @@ private:
     Point mouse_start_position;
     Point mouse_end_position;
     float scale;
-    bool items_being_dragged;
     Gui *gui;
 
     bool isHorizontal(float y1, float y2);

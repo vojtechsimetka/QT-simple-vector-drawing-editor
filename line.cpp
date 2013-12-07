@@ -340,6 +340,15 @@ bool Line::intersects(Line *line) const
      return false;
  }
 
+ bool Line::intersects(float x, float y) const
+ {
+     // If distance from line and point is lower then treshold value return true
+     if (this->distanceFromPoint(x, y) < OpenGLWidget::treshold_value)
+         return true;
+
+     return false;
+ }
+
  /**
  * @brief If point with coordinates x and y is nearby a control point, return the other one
  * @param x Coordinate x of point where user clicked
@@ -421,4 +430,10 @@ void Line::finalizeResize()
 {
     this->o_p1.setLocation(this->p1.getX(), this->p1.getY());
     this->o_p2.setLocation(this->p2.getX(), this->p2.getY());
+}
+
+void Line::translatef(float x, float y)
+{
+    this->p1.setLocation(this->p1.getX() + x, this->p1.getY() + y);
+    this->p2.setLocation(this->p2.getX() + x, this->p2.getY() + y);
 }
