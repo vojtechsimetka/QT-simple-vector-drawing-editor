@@ -12,11 +12,10 @@
 #ifndef RECTANGLE_H
 #define RECTANGLE_H
 
-#include "element.h"
 #include "point.h"
 #include "openglwidget.h"
 
-class Rectangle : public Element
+class Rectangle
 {
 public:
     Rectangle(float x1, float y1, float x2, float y2);
@@ -26,7 +25,11 @@ public:
     void resize(float x1, float y1, float x2, float y2);
     bool intersects(float, float, float, float) const;
     bool intersects(Point) const;
-    bool getCounterPoint(float, float, float *, float *) const;
+    bool getCounterPoint(float, float, float *, float *, Qt::Corner *orientation) const;
+//    float getMinX() const;
+//    float getMinY() const;
+//    float getMaxX() const;
+//    float getMaxY() const;
 
     Point getP1() const;
     void setP1(const Point &value);
@@ -37,6 +40,8 @@ public:
 private:
     Point p1;
     Point p2;
+    Point p3;
+    Point p4;
 };
 
 #endif // RECTANGLE_H

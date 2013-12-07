@@ -71,7 +71,7 @@ void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
 void ChangesLog::undoStep()
 {
     // Nothing to undo
-    if (changes.empty() || lastChange == 0)
+    if (!this->canUndo())
         return;
 
     // Point to last change
@@ -97,9 +97,14 @@ void ChangesLog::undoStep()
     default:
         break;
     }
+}
 
-    // Repaint glWindow
-    MainWindow::opw->repaint();
+bool ChangesLog::canUndo()
+{
+    if (changes.empty() || lastChange == 0)
+        return false;
+
+    return true;
 }
 
 /**
@@ -108,7 +113,7 @@ void ChangesLog::undoStep()
 void ChangesLog::redoStep()
 {
     // Nothing to redo
-    if (changes.empty() || ((int)changes.size() == lastChange))
+    if (!this->canRedo())
         return;
 
     std::vector<Element *> *list;
@@ -132,7 +137,12 @@ void ChangesLog::redoStep()
     }
 
     lastChange++;
+}
 
-    // Repaint glWindow
-    MainWindow::opw->repaint();
+bool ChangesLog::canRedo()
+{
+    if (changes.empty() || ((int)changes.size() == lastChange))
+        return false;
+
+    return true;
 }

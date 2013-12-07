@@ -10,6 +10,7 @@
  */
 #include "rectangle.h"
 #include <QDebug>
+#include <QRect>
 
 /**
  * @brief Rectangle constructor
@@ -19,10 +20,16 @@
  * @param h Rectangle's height
  */
 Rectangle::Rectangle(float x1, float y1, float x2, float y2)
-    : Element(ElementType::RECTANGLE)
-    , p1(x1,y1)
-    , p2(x2,y2)
+    : p1(x1,y1)
+    , p2(x2,y1)
+    , p3(x2,y2)
+    , p4(x1,y2)
 {
+}
+
+Rectangle::~Rectangle()
+{
+
 }
 
 /**
@@ -31,23 +38,31 @@ Rectangle::Rectangle(float x1, float y1, float x2, float y2)
 void Rectangle::paintMe() const
 {
     // Sets color
-    glColor3f(0.0, 0.0, 0.0);
+    glLineWidth(1.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_LINE_SMOOTH);
+
+    glColor4f(0.5, 0.75, 0.95, 0.7);
 
     // Draws rectangle
     glBegin(GL_LINES);
     // Top
     glVertex2f(this->p1.getX(), this->p1.getY());
-    glVertex2f(this->p2.getX(), this->p1.getY());
+    glVertex2f(this->p2.getX(), this->p2.getY());
     // Right
-    glVertex2f(this->p2.getX(), this->p1.getY());
     glVertex2f(this->p2.getX(), this->p2.getY());
+    glVertex2f(this->p3.getX(), this->p3.getY());
     // Bottom
-    glVertex2f(this->p2.getX(), this->p2.getY());
-    glVertex2f(this->p1.getX(), this->p2.getY());
+    glVertex2f(this->p3.getX(), this->p3.getY());
+    glVertex2f(this->p4.getX(), this->p4.getY());
     // Left
-    glVertex2f(this->p1.getX(), this->p2.getY());
+    glVertex2f(this->p4.getX(), this->p4.getY());
     glVertex2f(this->p1.getX(), this->p1.getY());
     glEnd();
+
+    glDisable(GL_LINE_SMOOTH);
+    glDisable(GL_BLEND);
 }
 
 /**
@@ -57,8 +72,8 @@ void Rectangle::paintPoints() const
 {
     Point::paintPoint(this->p1);
     Point::paintPoint(this->p2);
-    Point::paintPoint(this->p1.getX(), this->p2.getY());
-    Point::paintPoint(this->p2.getX(), this->p1.getY());
+    Point::paintPoint(this->p3);
+    Point::paintPoint(this->p4);
 }
 
 /**
@@ -73,7 +88,11 @@ void Rectangle::resize(float x1, float y1, float x2, float y2)
     this->p1.setX(x1);
     this->p1.setY(y1);
     this->p2.setX(x2);
-    this->p2.setY(y2);
+    this->p2.setY(y1);
+    this->p3.setX(x2);
+    this->p3.setY(y2);
+    this->p4.setX(x1);
+    this->p4.setY(y2);
 
 }
 
@@ -124,11 +143,62 @@ bool Rectangle::intersects(Point ) const
 }
 
 
-bool Rectangle::getCounterPoint(float , float , float *, float *) const
+bool Rectangle::getCounterPoint(float x, float y, float *ox, float *oy, Qt::Corner *orientation) const
 {
+    if (Point::isNearby(x, y, this->p1.getX(), this->p1.getY()))
+    {
+        *ox = this->p3.getX();
+        *oy = this->p3.getY();
+        *orientation = Qt::TopLeftCorner;
+        return true;
+    }
+
+    else if (Point::isNearby(x, y, this->p2.getX(), this->p2.getY()))
+    {
+        *ox = this->p4.getX();
+        *oy = this->p4.getY();
+        *orientation = Qt::TopRightCorner;
+        return true;
+    }
+
+    else if (Point::isNearby(x, y, this->p3.getX(), this->p3.getY()))
+    {
+        *ox = this->p1.getX();
+        *oy = this->p1.getY();
+        *orientation = Qt::BottomRightCorner;
+        return true;
+    }
+
+    else if (Point::isNearby(x, y, this->p4.getX(), this->p4.getY()))
+    {
+        *ox = this->p2.getX();
+        *oy = this->p2.getY();
+        *orientation = Qt::BottomLeftCorner;
+        return true;
+    }
+
     return false;
+}/*
+
+float Rectangle::getMinX() const
+{
+    return this->p1.getX() < this->p2.getX() ? this->getP1().getX() : this->p2.getX();
 }
 
+float Rectangle::getMinY() const
+{
+    return this->p1.getY() < this->p2.getY() ? this->getP1().getY() : this->p2.getY();
+}
+
+float Rectangle::getMaxX() const
+{
+    return this->p1.getX() > this->p2.getX() ? this->getP1().getX() : this->p2.getX();
+}
+
+float Rectangle::getMaxY() const
+{
+    return this->p1.getY() > this->p2.getY() ? this->getP1().getY() : this->p2.getY();
+}*/
 
 
 

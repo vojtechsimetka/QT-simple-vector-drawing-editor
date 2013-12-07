@@ -20,10 +20,11 @@ SOURCES += main.cpp\
     point.cpp \
     data.cpp \
     metaelement.cpp \
-    rectangle.cpp \
     changeslog.cpp \
     selectionrectangle.cpp \
-    guideline.cpp
+    guideline.cpp \
+    gui.cpp \
+    rectangle.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -32,10 +33,14 @@ HEADERS  += mainwindow.h \
     point.h \
     data.h \
     metaelement.h \
-    rectangle.h \
     changeslog.h \
     selectionrectangle.h \
-    guideline.h
+    guideline.h \
+    gui.h \
+    rectangle.h
 
-FORMS    += mainwindow.ui
+FORMS    +=
+
+RESOURCES += \
+    pgr2013.qrc
 

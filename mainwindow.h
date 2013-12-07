@@ -13,35 +13,20 @@
 
 #include <QMainWindow>
 #include "openglwidget.h"
-#include "ui_mainwindow.h"
+#include "gui.h"
 #include "changeslog.h"
 
-namespace Ui
-{
-    class MainWindow;
-}
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-public slots:
-    void undo();
-    void redo();
-    void select();
-    void rotate();
-    void drawLine();
-    void dlt();
-    void pan();
-
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    static OpenGLWidget *opw;
-    static QLineEdit * lineEdit;
 
 private:
-    Ui::MainWindow *ui;
+    Gui *ui;
 };
 
 #endif // MAINWINDOW_H

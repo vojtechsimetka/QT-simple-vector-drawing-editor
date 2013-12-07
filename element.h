@@ -20,7 +20,7 @@ namespace ElementType
         POLYGON,
         CIRCLE,
         LINE,
-        RECTANGLE
+        SELECTION_RECTANGLE //NEVER use in drawing
     } Type;
 }
 
@@ -28,12 +28,18 @@ class Element
 {
 public:
     Element(ElementType::Type type);
+    virtual ~Element();
     virtual void paintMe() const = 0;
     virtual void paintPoints() const = 0;
     virtual void resize(float x1, float y1, float x2, float y2) = 0;
     virtual bool intersects(float min_x, float min_y, float max_x, float max_y) const = 0;
     virtual bool intersects(Point) const = 0;
     virtual bool getCounterPoint(float, float, float *, float *) const = 0;
+    virtual float getMinX() const = 0;
+    virtual float getMinY() const = 0;
+    virtual float getMaxX() const = 0;
+    virtual float getMaxY() const = 0;
+    void setScaleAndTranslation(float, float, float, float);
     void highlightMe();
     void deHighlightMe();
     void selectMe();
@@ -45,6 +51,10 @@ protected:
     bool highlighted;
     bool selected;
     const ElementType::Type type;
+    float offset_x;
+    float offset_y;
+    float scale_x;
+    float scale_y;
 };
 
 #endif // ELEMENT_H

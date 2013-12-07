@@ -112,5 +112,14 @@ float Point::distance(float x, float y) const
     return sqrt((dx*dx) + (dy*dy));
 }
 
+float Point::distance(float x1, float y1, float x2, float y2)
+{
+    float dx = x1 - x2;
+    float dy = y1 - y2;
+    return sqrt((dx*dx) + (dy*dy));
+}
 
-
+bool Point::isNearby(float x1, float y1, float x2, float y2)
+{
+    return Point::distance(x1, y1, x2, y2) < 3*OpenGLWidget::treshold_value;
+}

@@ -17,6 +17,15 @@ Element::Element(ElementType::Type type)
     : highlighted(false)
     , selected(false)
     , type(type)
+    , scale_x(1)
+    , scale_y(1)
+    , offset_x(0)
+    , offset_y(0)
+{
+
+}
+
+Element::~Element()
 {
 
 }
@@ -61,4 +70,12 @@ ElementType::Type Element::getType() const
 bool Element::isSelected() const
 {
     return this->selected;
+}
+
+void Element::setScaleAndTranslation(float scale_x, float scale_y, float offset_x, float offset_y)
+{
+    this->scale_x = scale_x;
+    this->scale_y = scale_y;
+    this->offset_x = offset_x;
+    this->offset_y = offset_y;
 }

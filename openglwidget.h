@@ -17,6 +17,7 @@
 #include "metaelement.h"
 #include "guideline.h"
 #include "selectionrectangle.h"
+#include "gui.h"
 
 const int MINDISTANCE = 8;
 const int INF = 10000;
@@ -25,6 +26,8 @@ const int INF = 10000;
 class Data;
 class Line;
 class GuideLine;
+class Gui;
+class SelectionRectangle;
 
 // Drawer state enumerator
 typedef enum
@@ -32,7 +35,6 @@ typedef enum
     DRAW,
     SELECT_E,
     ROTATE,
-    DLT,
     CHANGESIZE,
     PAN
 } Status;
@@ -50,7 +52,7 @@ typedef enum
 class OpenGLWidget : public QGLWidget
 {
 public:
-    OpenGLWidget(QWidget *parent = NULL);
+    OpenGLWidget(Gui *gui, QWidget *parent = NULL);
     ~OpenGLWidget();
     void initializeGL();
     void paintGL();
@@ -68,14 +70,14 @@ private:
     MetaElement metaElement;
     GuideLine *vertical_guideline;
     GuideLine *horizontal_guideline;
+    SelectionRectangle *selection;
     Point offset;
     Point aux_offset;
     Point mouse_start_position;
     Point mouse_end_position;
     float scale;
-    SelectionRectangle selection_rectangle;
-    std::vector<Element *> selected_items;
     bool items_being_dragged;
+    Gui *gui;
 
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);
@@ -94,7 +96,6 @@ private:
     void mouseMoveDraw(float *x, float *y);
     float translateX(float);
     float translateY(float);
-    bool selectionContains(Element *);
 
 protected:
     void resizeGL(int w, int h);

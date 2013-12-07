@@ -23,6 +23,8 @@ public:
     static void paintPoint(Point p);
     static void paintPoint(float x, float y);
     float distance(float x, float y) const;
+    static float distance(float x1, float y1, float x2, float y2);
+    static bool isNearby(float x1, float y1, float x2, float y2);
 
 private:
     float x;

@@ -33,19 +33,6 @@ void Data::createLine(float x1, float y1, float x2, float y2)
 }
 
 /**
- * @brief Creates and adds rectangle from diagonal to data structure
- * @param x1 Coordinate x of point 1
- * @param y1 Coordinate y of point 1
- * @param x2 Coordinate x of point 2
- * @param y2 Coordinate y of point 2
- */
-void Data::createRectangle(float x1, float y1, float x2, float y2)
-{
-    // TODO: Changelog?
-    this->elements.push_back(new Rectangle(x1, y1, x2, y2));
-}
-
-/**
  * @brief Paints all elements from data structure
  */
 void Data::paintAll()

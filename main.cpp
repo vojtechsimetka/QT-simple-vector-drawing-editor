@@ -16,6 +16,9 @@ int main(int argc, char *argv[])
     // Creates application
     QApplication a(argc, argv);
 
+    // Show icons in menu
+    a.setAttribute(Qt::AA_DontShowIconsInMenus, false);
+
     // Creates window
     MainWindow w;
 

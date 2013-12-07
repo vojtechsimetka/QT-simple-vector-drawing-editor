@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>images/redo.png</file>
+        <file>images/undo.png</file>
+        <file>images/line.png</file>
+        <file>images/delete.png</file>
+        <file>images/left_ptr.png</file>
+        <file>images/top_right_corner.png</file>
+        <file>images/hand1.png</file>
+    </qresource>
+</RCC>

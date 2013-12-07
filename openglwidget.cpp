@@ -20,7 +20,7 @@ float OpenGLWidget::treshold_value = MINDISTANCE;
  * @brief OpenGL Widget constructor
  * @param parent Reference to parent component
  */
-OpenGLWidget::OpenGLWidget(QWidget *parent)
+OpenGLWidget::OpenGLWidget(Gui *gui, QWidget *parent)
     : QGLWidget(parent)
     , offset(0, 0)
     , aux_offset(0, 0)
@@ -28,6 +28,8 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
     , mouse_end_position(0, 0)
     , scale(1)
     , items_being_dragged(false)
+    , selection(new SelectionRectangle(gui))
+    , gui(gui)
 {
     // Initializes status
     this->status = SELECT_E;
@@ -54,6 +56,9 @@ OpenGLWidget::~OpenGLWidget()
 {
     // Unallocate data
     delete this->data;
+
+    // Deletes selection
+    delete this->selection;
 }
 
 /**
@@ -106,7 +111,7 @@ void OpenGLWidget::paintGL()
     glPopMatrix();
 
     // Draws selection rectangle
-    this->selection_rectangle.paintMe();
+    this->selection->paintMe();
 }
 
 /**
@@ -130,8 +135,14 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event)
     float x = this->translateX(event->x());
     float y = this->translateY(event->y());
 
+    // Right mouse button release or pan tool and left mouse button release
+    if (event->button() == Qt::RightButton ||
+        (event->button() == Qt::LeftButton &&
+        this->status == PAN))
+        this->aux_offset.setLocation(0, 0);
+
     // Left mouse button release
-    if (event->button() == Qt::LeftButton)
+    else if (event->button() == Qt::LeftButton)
     {
         switch(this->status)
         {
@@ -147,10 +158,6 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event)
             break;
         }
     }
-
-    // Right mouse button release
-    else if (event->button() == Qt::RightButton)
-        this->aux_offset.setLocation(0, 0);
 
     // Repaint scene
     this->repaint();
@@ -204,12 +211,15 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
         {
         case ElementType::CIRCLE:
         case ElementType::POLYGON:
-        case ElementType::RECTANGLE:
         case ElementType::LINE:
             // Add element to data structure
             this->data->add(metaElement.getElement());
             // Logs addition
             ChangesLog::sharedInstance()->doStep(ADD,0,0,metaElement.getElement());
+
+            // Disables redo and enables undo
+            this->gui->setUndo(true);
+            this->gui->setRedo(false);
 
             // Dehighlight all elements
             this->data->deHighlightAll();
@@ -246,11 +256,6 @@ void OpenGLWidget::createNewElement(float x, float y)
         catchToClosePoint(&x,&y);
         // Create new line
         e = new Line(x,y,x,y);
-        break;
-
-    case ElementType::RECTANGLE:
-        // Create new rectangle
-        e = new Rectangle(x,y,x,y);
         break;
 
     case ElementType::CIRCLE:
@@ -341,7 +346,7 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
             this->data->deHighlightAll();
             this->vertical_guideline->invalidate();
             this->horizontal_guideline->invalidate();
-            MainWindow::lineEdit->setText("");
+            this->gui->setLineEditText("");
             this->repaint();
         }
         break;
@@ -405,25 +410,25 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
         if (this->status == DRAW && this->type == ElementType::LINE)
         {
             this->status = CHANGESIZE;
-            len = MainWindow::lineEdit->text().toFloat();
-            MainWindow::lineEdit->setText("");
+            len = this->gui->getLineEditText().toFloat();
+            this->gui->setLineEditText("");
         }
         // Set new text
-        MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + this->qKeyEventToQString(keyEvent));
+        this->gui->appendTextToLineEdit(this->qKeyEventToQString(keyEvent));
         break;
 
     case Qt::Key_Enter:
     case Qt::Key_Q:
         this->catchStatus = FIXEDLENGTH;
         this->setAction(ElementType::LINE);
-        this->changeLength(MainWindow::lineEdit->text().toFloat());
+        this->changeLength(this->gui->getLineEditText().toFloat());
         break;
 
     case Qt::Key_Escape:
         if (this->status == CHANGESIZE)
         {
             this->setAction(ElementType::LINE);
-            MainWindow::lineEdit->setText(QString::number(len));
+            this->gui->setLineEditText(QString::number(len));
         }
         else
         {
@@ -439,21 +444,17 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
     case Qt::Key_Back:
     case Qt::Key_B:
         if (this->status == CHANGESIZE)
-        {
-            MainWindow::lineEdit->setText(MainWindow::lineEdit->text().remove(MainWindow::lineEdit->text().count()-1, 1));
-            if (MainWindow::lineEdit->text().count() == 0)
-                MainWindow::lineEdit->setText("0");
-        }
+            this->gui->deleteLastCharOfLineEdit();
         break;
 
     case Qt::Key_Period:
     case Qt::Key_Comma:
         if (this->status == CHANGESIZE)
         {
-            if (MainWindow::lineEdit->text().contains("."))
+            if (this->gui->getLineEditText().contains("."))
                 break;
 
-            MainWindow::lineEdit->setText(MainWindow::lineEdit->text() + ".");
+            this->gui->appendTextToLineEdit(".");
         }
         break;
     }
@@ -507,7 +508,9 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
     this->mouse_end_position.setLocation(event->x(), event->y());
 
     // Right button
-    if (event->buttons() & Qt::RightButton)
+    if (event->buttons() & Qt::RightButton ||
+        (event->buttons() & Qt::LeftButton &&
+         this->status == PAN))
     {
         // Determines how far the mouse was dragged
         float x1 = (event->x() - this->mouse_start_position.getX()) / this->scale;
@@ -539,6 +542,8 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                 break;
 
             case SELECT_E:
+                if (!this->metaElement.isEmpty())
+                    this->mouseMoveDraw(&x, &y);
                 break;
 
             default:
@@ -547,10 +552,13 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 
             if (this->catchStatus == FIXEDLENGTH)
             {
-                float len = MainWindow::lineEdit->text().toFloat();
+                float len = this->gui->getLineEditText().toFloat();
                 // Resizes element (change direction)
-                this->changeLengthNotMoveMouse(len, this->metaElement.getOrigin().getX(),
-                                               this->metaElement.getOrigin().getY(), &x, &y);
+                this->changeLengthNotMoveMouse(len,
+                                               this->metaElement.getOrigin().getX(),
+                                               this->metaElement.getOrigin().getY(),
+                                               &x,
+                                               &y);
                 this->metaElement.resizeTo(x,y);
             }
             else if (this->status != CHANGESIZE)
@@ -558,7 +566,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                 // Resizes element
                 this->metaElement.resizeTo(x,y);
 
-                MainWindow::lineEdit->setText(QString::number(this->metaElement.getOrigin().distance(x,y)));
+                this->gui->setLineEditText(QString::number(this->metaElement.getOrigin().distance(x,y)));
             }
         }
 
@@ -570,20 +578,21 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
             case DRAW:
                 catchToClosePoint(&x,&y);
                 break;
+
             case SELECT_E:
                 if (event->buttons() & Qt::LeftButton)
                 {
-                    this->selection_rectangle.resize(this->mouse_start_position.getX(),
-                                                     this->mouse_start_position.getY(),
-                                                     this->mouse_end_position.getX(),
-                                                     this->mouse_end_position.getY(),
-                                                     this->offset,
-                                                     this->scale);
+                    this->selection->resize(this->mouse_start_position.getX(),
+                                           this->mouse_start_position.getY(),
+                                           this->mouse_end_position.getX(),
+                                           this->mouse_end_position.getY(),
+                                           this->offset,
+                                           this->scale);
 
                     // Select or deselect element
                     foreach (Element *e, this->data->getElements())
                     {
-                        if (this->selection_rectangle.intersects(e))
+                        if (this->selection->selectionIntersects(e))
                             e->selectMe();
 
                         else
@@ -1057,8 +1066,22 @@ void OpenGLWidget::setAction(Status tool)
     this->status = tool;
     this->horizontal_guideline->invalidate();
     this->vertical_guideline->invalidate();
-    this->selection_rectangle.deactivate();
+    this->selection->deactivate();
     this->metaElement.clear();
+
+    switch (this->status)
+    {
+    case PAN:
+        this->setCursor(Qt::PointingHandCursor);
+        break;
+
+    case ROTATE:
+        this->setCursor(Qt::SizeBDiagCursor);
+        break;
+
+    default:
+        this->setCursor(Qt::ArrowCursor);
+    }
 }
 
 /**
@@ -1067,14 +1090,18 @@ void OpenGLWidget::setAction(Status tool)
 void OpenGLWidget::deleteSelection()
 {
     // Delete selected items from data
-    foreach (Element *e, this->selected_items)
-        data->remove(e);
+    foreach (Element *e, this->selection->getSelectedItems())
+        this->data->remove(e);
 
     // Logs deletion
-    ChangesLog::sharedInstance()->doStep(DELETE,0,0,new std::vector<Element *>(this->selected_items));
+    ChangesLog::sharedInstance()->doStep(DELETE,0,0,new std::vector<Element *>(this->selection->getSelectedItems()));
+
+    // Disables redo and enables undo
+    this->gui->setUndo(true);
+    this->gui->setRedo(false);
 
     // Clear selection
-    this->selected_items.clear();
+    this->selection->clear();
 
     // Repaint scene
     this->repaint();
@@ -1091,8 +1118,8 @@ void OpenGLWidget::changeLength(float length)
 
     Line *l = NULL;
     if (this->status != DRAW && this->type != ElementType::LINE)
-        if (!this->selected_items.empty())
-            l = (Line *)(this->selected_items.at(0));
+        if (!this->selection->empty())
+            l = (Line *)(this->selection->front());
         else return;
     else
         l = (Line *)this->metaElement.getElement();
@@ -1191,8 +1218,8 @@ void OpenGLWidget::changeLength(float length)
 Element * OpenGLWidget::topObjectAtMousePosition()
 {
     // Checks selected items first
-    for (std::vector<Element*>::reverse_iterator it = this->selected_items.rbegin();
-         it != this->selected_items.rend();
+    for (std::vector<Element*>::reverse_iterator it = this->selection->getSelectedItems().rbegin();
+         it != this->selection->getSelectedItems().rend();
          ++it)
     {
         Element *e = (Element*) *it;
@@ -1218,25 +1245,34 @@ Element * OpenGLWidget::topObjectAtMousePosition()
  */
 void OpenGLWidget::mouseReleaseSelect()
 {
-    if  (this->selection_rectangle.isActive())
+    if  (this->selection->isActive())
     {
-        // Deactivates selection rectangle
-        this->selection_rectangle.deactivate();
-
         // Selects all elements within selection rectangle
         foreach (Element *e, this->data->getElements())
         {
-            if (this->selection_rectangle.intersects(e))
+            if (this->selection->selectionIntersects(e))
             {
-                this->selected_items.push_back(e);
-                e->selectMe();
+                this->selection->addBack(e);
             }
             else
                 e->deSelectMe();
         }
+
+        // Deactivates selection rectangle
+        this->selection->deactivate();
     }
     else if (!this->metaElement.isEmpty())
+    {
+        this->data->add(this->metaElement.getElement());
         this->metaElement.clear();
+
+        // Dehighlight all elements
+        this->data->deHighlightAll();
+
+        // Clear dotted lines
+        this->vertical_guideline->invalidate();
+        this->horizontal_guideline->invalidate();
+    }
 }
 
 /**
@@ -1244,63 +1280,66 @@ void OpenGLWidget::mouseReleaseSelect()
  */
 void OpenGLWidget::mousePressSelect()
 {
+    float origin_x;
+    float origin_y;
+
+    if (this->selection->getCounterPointAndCalculatePoints(this->translateX(this->mouse_end_position.getX()),
+                                                           this->translateY(this->mouse_end_position.getY()),
+                                                           &origin_x,
+                                                           &origin_y))
+    {
+        this->metaElement.set(this->selection, origin_x, origin_y);
+        return;
+    }
+
     // Gets first object under cursor
     Element * object = this->topObjectAtMousePosition();
 
     // Some object is under cursor
     if (object == NULL)
     {
-        // Deselects all element
-        foreach (Element * e, this->selected_items)
-            e->deSelectMe();
-
         // Clears selected items
-        this->selected_items.clear();
+        this->selection->clear();
 
         // Starts displaying selection rectangle
-        this->selection_rectangle.resize(this->mouse_start_position.getX(),
-                                         this->mouse_start_position.getY(),
-                                         this->mouse_end_position.getX(),
-                                         this->mouse_end_position.getY(),
-                                         this->offset,
-                                         this->scale);
+        this->selection->resize(this->mouse_start_position.getX(),
+                               this->mouse_start_position.getY(),
+                               this->mouse_end_position.getX(),
+                               this->mouse_end_position.getY(),
+                               this->offset,
+                               this->scale);
     }
     else
     {
         // Object already was selected, attempt to resize it
-        if (object->isSelected())
-        {
-            float origin_x;
-            float origin_y;
+//        if (object->isSelected())
+//        {
+//            float origin_x;
+//            float origin_y;
 
-            // Gets counter point for point that is being resized point
-            if (object->getCounterPoint(this->translateX(this->mouse_end_position.getX()),
-                                        this->translateY(this->mouse_end_position.getY()),
-                                        &origin_x,
-                                        &origin_y))
-            {
-                this->metaElement.set(object, origin_x, origin_y);
-                return;
-            }
-        }
+//            // Gets counter point for point that is being resized point
+//            if (object->getCounterPoint(this->translateX(this->mouse_end_position.getX()),
+//                                        this->translateY(this->mouse_end_position.getY()),
+//                                        &origin_x,
+//                                        &origin_y))
+//            {
+//                this->metaElement.set(object, origin_x, origin_y);
+//                this->data->remove(object);
+//                return;
+//            }
+//        }
 
-        // Nothing was selected, add object to selection
-        else if (this->selected_items.size() == 0)
-        {
-            object->selectMe();
-            this->selected_items.push_back(object);
-        }
+        // Selection contains object, move objects
+        if (selection->contains(object))
+            this->items_being_dragged = true;
+
         // Selection does not contains object under cursor,
         // deselect all objects and select the new one
-        else if (!this->selectionContains(object))
+        else
         {
-            foreach (Element *e, this->selected_items)
-                e->deSelectMe();
-
-            object->selectMe();
-
-            this->selected_items.clear();
-            this->selected_items.push_back(object);
+            this->selection->clear();
+            this->selection->addBack(object);
+            this->selection->deactivate();
         }
 
         // Some elements are being dragged
@@ -1368,27 +1407,28 @@ void OpenGLWidget::mouseMoveDraw(float *x, float *y)
         case MIDDLE:
             catchToMiddleOfLine(x,y);
             break;
+        case FIXEDLENGTH:
+            break;
         }
     }
 }
 
+/**
+ * @brief Translates x position of the mouse into x position in model coordinate system
+ * @param x Coordinate x of the mouse in window
+ * @return Adequate coordinate x in model
+ */
 float OpenGLWidget::translateX(float x)
 {
     return (x / this->scale) - this->offset.getX();
 }
 
+/**
+ * @brief Translates y position of the mouse into y position in model coordinate system
+ * @param y Coordinate y of the mouse in window
+ * @return Adequate coordinate y in model
+ */
 float OpenGLWidget::translateY(float y)
 {
     return (y / this->scale) - this->offset.getY();
-}
-
-bool OpenGLWidget::selectionContains(Element *object)
-{
-    foreach(Element* e, this->selected_items)
-    {
-        if (e == object)
-            return true;
-    }
-
-    return false;
 }
