@@ -76,6 +76,7 @@ void Line::paintMe() const
     glEnd();
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_BLEND);
+    glLineWidth(1);
 }
 
 /**

@@ -29,13 +29,16 @@ SelectionRectangle::SelectionRectangle(Gui *gui)
 {
 }
 
+/**
+ * @brief Selection rectangle virtual destructor
+ */
 SelectionRectangle::~SelectionRectangle()
 {
     delete bounding_rectangle;
 }
 
 /**
- * @brief Paints rectangle
+ * @brief Paints slection rectangle
  */
 void SelectionRectangle::paintMe() const
 {
@@ -84,6 +87,12 @@ void SelectionRectangle::paintMe() const
 void SelectionRectangle::paintPoints() const
 {
 }
+
+/**
+ * @brief Paints bounding rectangle
+ * @param x
+ * @param y
+ */
 void SelectionRectangle::paintBoundingRectangle(float x, float y) const
 {
     if (this->valid_bounding_rectangle)

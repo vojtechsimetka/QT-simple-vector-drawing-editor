@@ -75,6 +75,7 @@ private:
     Point aux_offset;
     Point mouse_start_position;
     Point mouse_end_position;
+//    Point mouse_position;
     float scale;
     Gui *gui;
 
@@ -93,8 +94,12 @@ private:
     void mouseReleaseSelect();
     void mousePressSelect();
     void mouseMoveDraw(float *x, float *y);
-    float translateX(float);
-    float translateY(float);
+    float translateX(float) const;
+    float translateY(float) const;
+    void paintRuler();
+    void drawRectangle(float, float, float, float) const;
+    void drawLine(float, float, float, float) const;
+    void drawString(std::string, float, float) const;
 
 protected:
     void resizeGL(int w, int h);

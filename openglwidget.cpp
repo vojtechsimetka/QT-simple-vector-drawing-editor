@@ -114,6 +114,8 @@ void OpenGLWidget::paintGL()
 
     // Draws selection rectangle
     this->selection->paintMe();
+
+    this->paintRuler();
 }
 
 /**
@@ -539,6 +541,10 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
     float x = this->translateX(event->x());
     float y = this->translateY(event->y());
     this->mouse_end_position.setLocation(event->x(), event->y());
+
+    if (!(event->buttons() & Qt::LeftButton ||
+          event->buttons() & Qt::RightButton))
+        this->mouse_start_position.setLocation(event->x(), event->y());
 
     // Right button
     if (event->buttons() & Qt::RightButton ||
@@ -1435,7 +1441,7 @@ void OpenGLWidget::mouseMoveDraw(float *x, float *y)
  * @param x Coordinate x of the mouse in window
  * @return Adequate coordinate x in model
  */
-float OpenGLWidget::translateX(float x)
+float OpenGLWidget::translateX(float x) const
 {
     return (x / this->scale) - this->offset.getX();
 }
@@ -1445,7 +1451,133 @@ float OpenGLWidget::translateX(float x)
  * @param y Coordinate y of the mouse in window
  * @return Adequate coordinate y in model
  */
-float OpenGLWidget::translateY(float y)
+float OpenGLWidget::translateY(float y) const
 {
     return (y / this->scale) - this->offset.getY();
 }
+
+void OpenGLWidget::paintRuler()
+{
+    // Clears space for ruler
+    glColor3f(1,1,1);
+    glRectf(0,0,this->width(),20);
+    glRectf(0,20,20,this->height());
+
+    // Draws mouse difference on horizontal ruler
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(0.5, 0.75, 0.95, 0.3);
+    if (this->mouse_start_position.getX() < this->mouse_end_position.getX())
+        glRectf(this->mouse_start_position.getX(),
+                0,
+                this->mouse_end_position.getX(),
+                20);
+    else
+        glRectf(this->mouse_end_position.getX(),
+                0,
+                this->mouse_start_position.getX(),
+                20);
+
+    // Draws mouse difference on vertical ruler
+    if (this->mouse_start_position.getY() < this->mouse_end_position.getY())
+        glRectf(0,
+                this->mouse_start_position.getY(),
+                20,
+                this->mouse_end_position.getY());
+    else
+        glRectf(0,
+                this->mouse_end_position.getY(),
+                20,
+                this->mouse_start_position.getY());
+    glDisable(GL_BLEND);
+
+    // Draws mouse position on both rulers
+    glColor3f(0,0,0);
+    this->drawLine(this->mouse_end_position.getX(), 0, this->mouse_end_position.getX(), 20);
+    this->drawLine(0, this->mouse_end_position.getY(), 20, this->mouse_end_position.getY());
+
+    // Draws ruler boundaries
+    glColor3f(0.8, 0.8, 0.8);
+    this->drawRectangle(20, 0, this->width(), 20);
+    this->drawRectangle(0, 20, 20, this->height());
+
+    // Magic
+    int numbers = (int)(this->scale * 100);
+    float i1 = 1;
+
+    // Determines how devision ratio
+    while (numbers < 50)  {numbers *= 2; i1*=2;}
+    while (numbers > 100) {numbers /= 2; i1/=2;}
+
+    // Creates scale size
+    float normalized_n = i1 * 100;
+
+    // Determines first x coordinate
+    int x = (int) (this->offset.getX()) % (int)(normalized_n);
+    int y = (int) (this->offset.getY()) % (int)(normalized_n);
+
+    // Normalizes x counter
+    float j = (int)(-this->offset.getX() / normalized_n) * normalized_n;
+
+    // Draws x ruler
+    for (int i = x; i < this->width()/this->scale; i+=normalized_n, j+=normalized_n)
+    {
+        float tmp_x = i*this->scale;
+        this->drawLine(tmp_x, 0, tmp_x, 20);
+        QString str = QString::number(j);
+        this->renderText(tmp_x + 5, 15, 0, str);
+//        this->drawString(QString::number(j).toStdString(), tmp_x + 5, 15);
+    }
+
+    // Normalizes y counter
+    j = (int)(-this->offset.getY() / normalized_n) * normalized_n;
+
+    // Draws y ruler
+    for (int i = y; i < this->height()/this->scale; i+=normalized_n, j+=normalized_n)
+    {
+        float tmp_y = i*this->scale;
+        this->drawLine(0, tmp_y, 20, tmp_y);
+//        glPushMatrix();
+//        glRotatef(90, 0, 0,0); //rotate(+Math.PI/2.0);
+        this->drawString(QString::number(j).toStdString(), tmp_y + 40, -5);
+//        glPopMatrix();
+    }
+
+    // Repaints 20x20 rectangle at the beginning
+    glColor3f(1, 1, 1);
+    glRectf(0, 0, 19, 20);
+}
+
+void OpenGLWidget::drawRectangle(float x1, float y1, float x2, float y2) const
+{
+    this->drawLine(x1, y1, x2, y1);
+    this->drawLine(x2, y1, x2, y2);
+    this->drawLine(x2, y2, x1, y2);
+    this->drawLine(x1, y2, x1, y1);
+}
+
+void OpenGLWidget::drawLine(float x1, float y1, float x2, float y2) const
+{
+    glBegin(GL_LINES);
+    glVertex2f(x1, y1);
+    glVertex2f(x2, y2);
+    glEnd();
+}
+
+void OpenGLWidget::drawString(std::string str, float x, float y) const
+{
+    // Sets the position of the text in the window using the x and y coordinates
+//    glRasterPos2f(x,y);
+
+//    this->renderText(x,y,0,str);
+
+    // Loop to display character by character
+//    for (int i = 0; i < str.size(); i++)
+//    {
+//        glPushAttrib(GL_LIST_BIT);
+//        glListBase(glGenLists(96) - 32);
+//        glCallLists(str.size(), GL_UNSIGNED_BYTE, &str);
+//        glPopAttrib();
+//        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,string[i]);
+//    }
+};
