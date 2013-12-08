@@ -76,6 +76,9 @@ void OpenGLWidget::initializeGL()
 
     // Disables Z-buffer
     glDisable(GL_DEPTH_TEST);
+
+    // Load font
+    this->font = new Font();
 }
 
 /**
@@ -1524,9 +1527,9 @@ void OpenGLWidget::paintRuler()
     {
         float tmp_x = i*this->scale;
         this->drawLine(tmp_x, 0, tmp_x, 20);
+        // Draw number
         QString str = QString::number(j);
-      //  this->renderText(tmp_x + 5, 15, 0, str);
-        this->drawString(QString::number(j).toStdString(), tmp_x + 2, 10);
+        font->render(str.toStdString().c_str(), tmp_x + 2, 10);
     }
 
     // Normalizes y counter
@@ -1537,10 +1540,9 @@ void OpenGLWidget::paintRuler()
     {
         float tmp_y = i*this->scale;
         this->drawLine(0, tmp_y, 20, tmp_y);
-//        glPushMatrix();
-//        glRotatef(90, 0, 0,0); //rotate(+Math.PI/2.0);
-//        this->drawString(QString::number(j).toStdString(), tmp_y + 40, -5);
-//        glPopMatrix();
+        // Draw number
+        QString str = QString::number(j);
+        font->render(str.toStdString().c_str(), 0, tmp_y + 2);
     }
 
     // Repaints 20x20 rectangle at the beginning
@@ -1564,12 +1566,6 @@ void OpenGLWidget::drawLine(float x1, float y1, float x2, float y2) const
     glEnd();
 }
 
-void OpenGLWidget::drawString(std::string str, float x, float y) const
-{
-    Font *font = new Font();
-
-    font->render(str.c_str(), x, y);
-}
 
 
 

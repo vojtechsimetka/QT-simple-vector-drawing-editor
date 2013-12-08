@@ -81,6 +81,7 @@ private:
 //    Point mouse_position;
     float scale;
     Gui *gui;
+    Font *font;
 
     bool isHorizontal(float y1, float y2);
     bool isVertical(float x1, float x2);

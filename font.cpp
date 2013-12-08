@@ -58,7 +58,6 @@ void Font::render(const char* c, float x, float y)
     glScalef(1.0/glTextureImg.width(), -1.0/glTextureImg.height(), 1.0);
     glMatrixMode(GL_MODELVIEW);
 
-   qDebug() << c;
    for(int i = 0; i < strlen(c); ++i)
    {
       int idx = c[i] - ' ';
