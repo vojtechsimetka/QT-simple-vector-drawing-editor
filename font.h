@@ -1,3 +1,17 @@
+/**
+ * PGR 2013 project
+ * Texture-mapped text.
+ * Inspired by http://10098.arnet.am/?p=118
+ *
+ * @author  xskota05 Klara Vankova
+ *          xsimet00 Vojtech Simetka
+ *          Grigory
+ *
+ * @date    2011/25/4
+ * @version 1
+ * @file    font.h
+ */
+
 #ifndef FONT_H
 #define FONT_H
 

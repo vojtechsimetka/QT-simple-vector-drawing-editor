@@ -249,7 +249,7 @@ void OpenGLWidget::mouseReleaseDraw(float x, float y)
             // Clear information in metaelement
             this->metaElement.clear();
 
-            if (this->catchStatus == FIXEDLENGTH)
+            if (this->catchStatus != CLASSIC)
                 this->catchStatus = CLASSIC;
 
             // Starts new element from same coordinates where we've finnished
@@ -368,6 +368,7 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
     {
     case Qt::Key_Space:
         // Stop with drawing lines
+        this->catchStatus = CLASSIC;
         if (this->status == DRAW && this->type == ElementType::LINE)
         {
             if (ChangesLog::sharedInstance()->canUndo())
@@ -901,20 +902,14 @@ bool OpenGLWidget::catchToParallelLine(float x11, float y11, float *x21, float *
 
 // NEFUNGUJE - JEN NA VODOROVNY CARY
 // TODO: PREPSAT!!
-void OpenGLWidget::catchToMiddleOfLine(float *x, float *y)
+void OpenGLWidget::catchToMiddleOfLine(float x11, float y11, float *x, float *y)
 {
-    // Get all elements in window
-    std::vector<Element *> allElements = this->data->getElements();
-    std::vector<Element *>::iterator it = allElements.begin();
+    bool middleFound = false;
 
-
-    float k = ((*y - this->metaElement.getOrigin().getY())
-               / (*x - this->metaElement.getOrigin().getX()));
-
-    // Find if some line is parallel to current painted line
-    for (; it != allElements.end(); ++it) {
-        // Get line
-        Line *e = (Line *)(*it);
+    // Find if some line is perpendicular to current painted line
+    foreach (Element *element, this->data->getElements())
+    {
+        Line *e = (Line *)element;
 
         // Get lines coordinates
         float x1 = e->getP1().getX();
@@ -922,50 +917,35 @@ void OpenGLWidget::catchToMiddleOfLine(float *x, float *y)
         float x2 = e->getP2().getX();
         float y2 = e->getP2().getY();
 
+        if (!(((x1 == x11) && (y1 == y11))
+                || ((x2 == x11) && (y2 == y11))))
+            continue;
+
+        // Get coordinates of middle of line
         float sx = x1 + (x2 - x1) / 2;
         float sy = y1 + (y2 - y1) / 2;
 
-        // Close to line's first x coordinate
-        if (fabs(sx - *x) < this->treshold_value)
+        // Direction from middle of line to point
+        float k1 = (*y - sy) / (*x - sx);
+
+        // Direction of line
+        float k2 = (y2 - y1) / (x2 - x1);
+        //qDebug() << "TEST";
+        if (fabs(k1 + (1/k2)) < 0.5)
         {
-            // No line currently painting
-            if ((this->metaElement.isEmpty())
-                    || (*x == sx))
+            //qDebug() << "MIDDLE";
+            this->metaElement.highlightMe();
+            e->highlightMe();
+
+            if (k1 > 1)
             {
-                *x = x1;
+                *x = (-k2 * (*y - sy)) + sx;
             }
-            // Change currently painted lines leingth
             else
             {
-                float dx = (sx - *x);
-                float dy = k*dx;
-
-                *x = sx;
-                *y += dy;
+                *y = ((*x - sx) / -k2) + sy;
             }
         }
-
-        if (fabs(sy - *y) < this->treshold_value)
-        {
-            // No line currently painting
-            if ((this->metaElement.isEmpty())
-                    || (*y == sy)
-                    || (fabs(*x - sx) < this->treshold_value))
-
-            {
-                *y = sy;
-            }
-            // Change currently painted lines leingth
-            else
-            {
-                float dy = (sy - *y);
-                float dx = dy/k;
-
-                *y = sy;
-                *x += dx;
-            }
-        }
-
     }
 }
 
@@ -1007,7 +987,8 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         {
             // No line currently painting
             if ((this->metaElement.isEmpty())
-                    || (k == INF))
+                    || (k == INF)
+                    || (this->catchStatus == CLASSIC))
             {
                 *x = x1;
             }
@@ -1029,7 +1010,8 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
         {
             // No line currently painting
             if ((this->metaElement.isEmpty())
-                    || (k == INF))
+                    || (k == INF)
+                    || (this->catchStatus == CLASSIC))
             {
                 *x = x2;
             }
@@ -1051,10 +1033,16 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
             // No line currently painting
             if ((this->metaElement.isEmpty())
                     || (k == 0)
-                    || (vertical_guideline->isValid()))
+                    || (vertical_guideline->isValid())
+                    || (this->catchStatus == CLASSIC))
             {
                 *y = y1;
                 vertical_guideline->resizeTo(*x, *y);
+                if (this->catchStatus != CLASSIC)
+                {
+                    this->data->deHighlightAll();
+                    this->metaElement.deHighlightMe();
+                }
             }
             // Change currently painted lines leingth
             else
@@ -1073,10 +1061,16 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
             // No line currently painting
             if ((this->metaElement.isEmpty())
                     || (k == 0)
-                    || (vertical_guideline->isValid()))
+                    || (vertical_guideline->isValid())
+                    || (this->catchStatus == CLASSIC))
             {
                 *y = y2;
                 vertical_guideline->resizeTo(*x, *y);
+                if (this->catchStatus != CLASSIC)
+                {
+                    this->data->deHighlightAll();
+                    this->metaElement.deHighlightMe();
+                }
             }
             // Change currently painted lines leingth
             else
@@ -1420,10 +1414,6 @@ void OpenGLWidget::mouseMoveDraw(float *x, float *y)
 
         switch (this->catchStatus)
         {
-        case CLASSIC:
-            // Try to catch point to another very close point
-            catchToClosePoint(x,y);
-            break;
         case PARALLEL:
             catchToParallelLine(x1,y1,x,y);
             break;
@@ -1431,11 +1421,14 @@ void OpenGLWidget::mouseMoveDraw(float *x, float *y)
             catchToPerpendicular(x1,y1,x,y);
             break;
         case MIDDLE:
-            catchToMiddleOfLine(x,y);
+            catchToMiddleOfLine(x1,y1,x,y);
             break;
         case FIXEDLENGTH:
             break;
         }
+
+        // Try to catch point to another very close point
+        catchToClosePoint(x,y);
     }
 }
 
