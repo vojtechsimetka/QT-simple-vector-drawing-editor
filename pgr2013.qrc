@@ -8,4 +8,7 @@
         <file>images/top_right_corner.png</file>
         <file>images/hand1.png</file>
     </qresource>
+    <qresource prefix="/font">
+        <file>font/font.bmp</file>
+    </qresource>
 </RCC>

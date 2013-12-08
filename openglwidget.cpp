@@ -1525,8 +1525,8 @@ void OpenGLWidget::paintRuler()
         float tmp_x = i*this->scale;
         this->drawLine(tmp_x, 0, tmp_x, 20);
         QString str = QString::number(j);
-        this->renderText(tmp_x + 5, 15, 0, str);
-//        this->drawString(QString::number(j).toStdString(), tmp_x + 5, 15);
+      //  this->renderText(tmp_x + 5, 15, 0, str);
+        this->drawString(QString::number(j).toStdString(), tmp_x + 2, 10);
     }
 
     // Normalizes y counter
@@ -1539,7 +1539,7 @@ void OpenGLWidget::paintRuler()
         this->drawLine(0, tmp_y, 20, tmp_y);
 //        glPushMatrix();
 //        glRotatef(90, 0, 0,0); //rotate(+Math.PI/2.0);
-        this->drawString(QString::number(j).toStdString(), tmp_y + 40, -5);
+//        this->drawString(QString::number(j).toStdString(), tmp_y + 40, -5);
 //        glPopMatrix();
     }
 
@@ -1566,18 +1566,10 @@ void OpenGLWidget::drawLine(float x1, float y1, float x2, float y2) const
 
 void OpenGLWidget::drawString(std::string str, float x, float y) const
 {
-    // Sets the position of the text in the window using the x and y coordinates
-//    glRasterPos2f(x,y);
+    Font *font = new Font();
 
-//    this->renderText(x,y,0,str);
+    font->render(str.c_str(), x, y);
+}
 
-    // Loop to display character by character
-//    for (int i = 0; i < str.size(); i++)
-//    {
-//        glPushAttrib(GL_LIST_BIT);
-//        glListBase(glGenLists(96) - 32);
-//        glCallLists(str.size(), GL_UNSIGNED_BYTE, &str);
-//        glPopAttrib();
-//        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,string[i]);
-//    }
-};
+
+

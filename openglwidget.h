@@ -11,13 +11,16 @@
 #ifndef OPENGLWIDGET_H
 #define OPENGLWIDGET_H
 
+
 #include <QGLWidget>
 #include <QtOpenGL>
+
 #include "data.h"
 #include "metaelement.h"
 #include "guideline.h"
 #include "selectionrectangle.h"
 #include "gui.h"
+#include "font.h"
 
 const int MINDISTANCE = 8;
 const int INF = 10000;

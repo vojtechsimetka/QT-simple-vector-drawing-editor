@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     selectionrectangle.cpp \
     guideline.cpp \
     gui.cpp \
-    rectangle.cpp
+    rectangle.cpp \
+    font.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -37,7 +38,8 @@ HEADERS  += mainwindow.h \
     selectionrectangle.h \
     guideline.h \
     gui.h \
-    rectangle.h
+    rectangle.h \
+    font.h
 
 FORMS    +=
 
