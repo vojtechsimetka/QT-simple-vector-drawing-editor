@@ -67,6 +67,32 @@ void ChangesLog::doStep(Actions a, int offsetX, int offsetY, void *object)
 }
 
 /**
+ * @brief Log one step
+ * @param a Action to log
+ * @param offsetX X offset if object was moved.
+ * @param offsetY Y offset if object was moved.
+ * @param object Object ID
+ */
+void ChangesLog::doStep(Actions a, Point *origin, Point *changed, Qt::Corner orientation, void *object)
+{
+    // Remove all possible redo
+    while ((int)changes.size() != lastChange)
+        changes.pop_back();
+
+    // Create new step
+    Step *s = new Step();
+    s->action = a;
+    s->origin = origin;
+    s->changed = changed;
+    s->orientation = orientation;
+    s->object = object;
+
+    // Add step to list of changes
+    changes.push_back(s);
+    lastChange++;
+}
+
+/**
  * @brief Undo step
  */
 void ChangesLog::undoStep()
@@ -99,6 +125,20 @@ void ChangesLog::undoStep()
             e->translatef(-s->offsetX, -s->offsetY);
         }
         this->selection->calculateBoundingRectangle();
+        break;
+    case RESIZE:
+        list = (std::vector<Element *> *) s->object;
+        //this->selection->deselectAll();
+        foreach (Element *e, *list) {
+            this->selection->addBack(e);
+        }
+        this->selection->calculateBoundingRectangle();
+        this->selection->storeDistancesToFixedPoint();
+        this->selection->resize(s->origin->getX(),
+                                s->origin->getY(),
+                                s->changed->getX(),
+                                s->changed->getY(),
+                                s->orientation);
         break;
     default:
         break;

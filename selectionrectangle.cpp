@@ -137,6 +137,12 @@ void SelectionRectangle::resize(float x1, float y1, float x2, float y2, const Po
     this->transform(offset, scale);
 }
 
+void SelectionRectangle::resize(float x1, float y1, float x2, float y2, Qt::Corner orientation)
+{
+    this->orientation = orientation;
+    this->resize(x1,y1,x2,y2);
+}
+
 void SelectionRectangle::resize(float ox, float oy, float x, float y)
 {
     float scale_x, scale_y;
@@ -393,8 +399,8 @@ bool SelectionRectangle::getCounterPointAndCalculatePoints(float x, float y, flo
             {
                 this->list_of_points.push_back(this->maxx - e->getMinX());
                 this->list_of_points.push_back(this->maxy - e->getMinY());
-                this->list_of_points.push_back(e->getMaxX() - this->maxx);
-                this->list_of_points.push_back(e->getMaxY() - this->maxy);
+                this->list_of_points.push_back(this->maxx - e->getMaxX());
+                this->list_of_points.push_back(this->maxy - e->getMaxY());
             }
             break;
 
@@ -432,6 +438,55 @@ bool SelectionRectangle::getCounterPointAndCalculatePoints(float x, float y, flo
         return true;
     }
     return false;
+}
+
+void SelectionRectangle::storeDistancesToFixedPoint()
+{
+    this->list_of_points.clear();
+
+
+    switch(this->orientation)
+    {
+    case Qt::TopLeftCorner:
+        foreach (Element *e, this->selected_items)
+        {
+            this->list_of_points.push_back(this->maxx - e->getMinX());
+            this->list_of_points.push_back(this->maxy - e->getMinY());
+            this->list_of_points.push_back(this->maxx - e->getMaxX());
+            this->list_of_points.push_back(this->maxy - e->getMaxY());
+        }
+        break;
+
+    case Qt::BottomRightCorner:
+        foreach (Element *e, this->selected_items)
+        {
+            this->list_of_points.push_back(e->getMinX() - this->minx);
+            this->list_of_points.push_back(e->getMinY() - this->miny);
+            this->list_of_points.push_back(e->getMaxX() - this->minx);
+            this->list_of_points.push_back(e->getMaxY() - this->miny);
+        }
+        break;
+
+    case Qt::TopRightCorner:
+        foreach (Element *e, this->selected_items)
+        {
+            this->list_of_points.push_back(e->getMinX() - this->minx);
+            this->list_of_points.push_back(this->maxy - e->getMinY());
+            this->list_of_points.push_back(e->getMaxX() - this->minx);
+            this->list_of_points.push_back(this->maxy - e->getMaxY());
+        }
+        break;
+
+    case Qt::BottomLeftCorner:
+        foreach (Element *e, this->selected_items)
+        {
+            this->list_of_points.push_back(this->maxx - e->getMinX());
+            this->list_of_points.push_back(e->getMinY() - this->miny);
+            this->list_of_points.push_back(this->maxx - e->getMaxX());
+            this->list_of_points.push_back(e->getMaxY() - this->miny);
+        }
+        break;
+    }
 }
 
 float SelectionRectangle::getMinX() const
@@ -494,6 +549,11 @@ void SelectionRectangle::drag(float x, float y)
 {
     this->offset_x = x - this->start_x;
     this->offset_y = y - this->start_y;
+}
+
+Qt::Corner SelectionRectangle::getOrientation()
+{
+    return this->orientation;
 }
 
 void SelectionRectangle::translatef(float, float)

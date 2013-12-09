@@ -14,6 +14,7 @@
 class Point
 {
 public:
+    Point() { this->x = 0; this->y = 0; }
     Point(float x, float y);
     float getX() const;
     void setX(float x);

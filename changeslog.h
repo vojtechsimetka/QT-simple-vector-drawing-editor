@@ -12,6 +12,7 @@
 #define CHANGESLOG_H
 
 #include "data.h"
+#include "point.h"
 #include "selectionrectangle.h"
 
 // Actions that can be done
@@ -19,7 +20,8 @@ enum Actions
 {
     ADD,
     DELETE,
-    MOVE
+    MOVE,
+    RESIZE
 };
 
 // Steps possible to do in app
@@ -28,6 +30,9 @@ struct Step
     Actions action;
     int offsetX;
     int offsetY;
+    Point *origin;
+    Point *changed;
+    Qt::Corner orientation;
     void *object;
 };
 
@@ -46,6 +51,7 @@ public:
     static ChangesLog *sharedInstance();
     void init(Data *d, SelectionRectangle *selection);
     void doStep(Actions a, int offsetX, int offsetY, void *object);
+    void doStep(Actions a, Point *min, Point *max, Qt::Corner orientation, void *object);
     void undoStep();
     bool canUndo();
     void redoStep();

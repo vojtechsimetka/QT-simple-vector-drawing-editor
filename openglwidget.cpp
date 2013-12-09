@@ -459,6 +459,7 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *keyEvent)
             this->catchStatus = FIXEDLENGTH;
             this->setAction(ElementType::LINE);
             this->changeLength(this->gui->getLineEditText().toFloat());
+            this->repaint();
         }
         break;
 
@@ -1242,22 +1243,16 @@ Element * OpenGLWidget::topObjectAtMousePosition()
     float y = this->translateY(this->mouse_end_position.getY());
 
     // Checks selected items first
-    for (std::vector<Element*>::reverse_iterator it = this->selection->getSelectedItems().rbegin();
-         it != this->selection->getSelectedItems().rend();
-         ++it)
+    foreach(Element *e, this->selection->getSelectedItems())
     {
-        Element *e = (Element*) *it;
-        if (e->intersects(x, y))
+        if (e != NULL && e->intersects(x, y))
             return e;
     }
 
     // Checks all data
-    for (std::vector<Element*>::reverse_iterator it = this->data->getElements().rbegin();
-         it != data->getElements().rend();
-         ++it)
+    foreach(Element *e, this->selection->getSelectedItems())
     {
-        Element *e = (Element*) *it;
-        if (e->intersects(x, y))
+        if (e != NULL && e->intersects(x, y))
             return e;
     }
 
@@ -1328,6 +1323,15 @@ void OpenGLWidget::mousePressSelect()
         // Removes elements from data structure
         foreach (Element *e, this->selection->getSelectedItems())
             this->data->remove(e);
+
+
+        ChangesLog::sharedInstance()->doStep(RESIZE,
+                                             new Point(origin_x, origin_y),
+                                             new Point(this->translateX(this->mouse_end_position.getX()),
+                                                       this->translateY(this->mouse_end_position.getY())),
+                                             this->selection->getOrientation(),
+                                             new std::vector<Element *>(this->selection->getSelectedItems())
+                                             );
 
         return;
     }
