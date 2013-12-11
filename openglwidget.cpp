@@ -1101,6 +1101,9 @@ void OpenGLWidget::catchToClosePoint(float *x, float *y)
  */
 void OpenGLWidget::setAction(Status tool)
 {
+    if (ChangesLog::sharedInstance()->canUndo())
+        this->gui->setUndo(true);
+
     this->status = tool;
     this->horizontal_guideline->invalidate();
     this->vertical_guideline->invalidate();
@@ -1120,6 +1123,7 @@ void OpenGLWidget::setAction(Status tool)
     default:
         this->setCursor(Qt::ArrowCursor);
     }
+    this->repaint();
 }
 
 /**
