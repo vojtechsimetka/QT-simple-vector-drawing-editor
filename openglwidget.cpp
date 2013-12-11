@@ -1325,13 +1325,13 @@ void OpenGLWidget::mousePressSelect()
             this->data->remove(e);
 
 
-        ChangesLog::sharedInstance()->doStep(RESIZE,
-                                             new Point(origin_x, origin_y),
-                                             new Point(this->translateX(this->mouse_end_position.getX()),
-                                                       this->translateY(this->mouse_end_position.getY())),
-                                             this->selection->getOrientation(),
-                                             new std::vector<Element *>(this->selection->getSelectedItems())
-                                             );
+//        ChangesLog::sharedInstance()->doStep(RESIZE,
+//                                             new Point(origin_x, origin_y),
+//                                             new Point(this->translateX(this->mouse_end_position.getX()),
+//                                                       this->translateY(this->mouse_end_position.getY())),
+//                                             this->selection->getOrientation(),
+//                                             new std::vector<Element *>(this->selection->getSelectedItems())
+//                                             );
 
         return;
     }
