@@ -18,7 +18,7 @@
 #include "data.h"
 #include "metaelement.h"
 #include "guideline.h"
-#include "selectionrectangle.h"
+#include "selection.h"
 #include "gui.h"
 #include "font.h"
 
@@ -30,7 +30,7 @@ class Data;
 class Line;
 class GuideLine;
 class Gui;
-class SelectionRectangle;
+class Selection;
 
 // Drawer state enumerator
 typedef enum
@@ -73,7 +73,7 @@ private:
     MetaElement metaElement;
     GuideLine *vertical_guideline;
     GuideLine *horizontal_guideline;
-    SelectionRectangle *selection;
+    Selection *selection;
     Point offset;
     Point aux_offset;
     Point mouse_start_position;

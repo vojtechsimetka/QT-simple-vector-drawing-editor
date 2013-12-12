@@ -13,7 +13,7 @@
 
 #include "data.h"
 #include "point.h"
-#include "selectionrectangle.h"
+#include "selection.h"
 
 // Actions that can be done
 enum Actions
@@ -45,11 +45,11 @@ private:
     // Pointer behind last change in changes
     int lastChange;
     Data *data;
-    SelectionRectangle *selection;
+    Selection *selection;
 
 public:
     static ChangesLog *sharedInstance();
-    void init(Data *d, SelectionRectangle *selection);
+    void init(Data *d, Selection *selection);
     void doStep(Actions a, int offsetX, int offsetY, void *object);
     void doStep(Actions a, Point *min, Point *max, Qt::Corner orientation, void *object);
     void undoStep();

@@ -23,18 +23,16 @@ class Element;
 class Gui;
 class Rectangle;
 
-class SelectionRectangle
+class Selection
 {
 public:
-    SelectionRectangle(Gui * gui);
-    ~SelectionRectangle();
+    Selection(Gui * gui);
+    ~Selection();
     void paintMe() const;
-    void paintPoints() const;
-    void resize(float x1, float y1, float x2, float y2, Qt::Corner orientation);
-
     void paintBoundingRectangle(float, float) const;
-    void resize(float, float, float, float, const Point offset, float scale);
-    bool getCounterPointAndCalculatePoints(float x, float y, float *ox, float *oy);
+
+    void resizeSelectionRectangle(float, float, float, float, const Point offset, float scale);
+    bool isResizePointClicked(float x, float y);
     void deactivate();
     void transform(Point offset, float scale);
     bool selectionIntersects(Point point) const;
@@ -43,7 +41,7 @@ public:
     bool selectionIntersects(const Element *l) const;
     bool isActive() const;
     bool empty() const;
-    Element * front() const;
+    Element *front() const;
     std::vector<Element *> getSelectedItems() const;
     void clear();
     void addBack(Element *e);
@@ -51,9 +49,10 @@ public:
 
     // Resizing
     void finalizeResize();
-    void startResize(float, float);
+    void startResize();
     bool isResized();
-    void resize(float x2, float y2);
+    void resizeSelectedItems(float x1, float y1, float x2, float y2, Qt::Corner orientation);
+    void resizeSelectedItems(float x2, float y2);
     void calculateBoundingRectangle();
     void storeDistancesToFixedPoint();
 
@@ -63,7 +62,7 @@ public:
     void finishDragging(float, float);
     void drag(float, float);
 
-    // ROtation
+    // Rotation
     bool isCentreOfRotation(float, float);
     bool isRotationPoint(float, float);
     bool isCentreOfRotationDragged();
@@ -72,6 +71,7 @@ public:
     void dragRotationPoint(float, float);
     void setCentreOfRotationDragged(bool);
     void setRotationPointDragged(bool);
+    void rotate(Point, float);
 
     Qt::Corner getOrientation();
 

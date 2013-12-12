@@ -34,9 +34,19 @@ Line::~Line()
 }
 
 /**
- * @brief Paints line to OpenGL context
+ * @brief If line is set visible, paints the line
  */
 void Line::paintMe() const
+{
+    if (this->visible)
+        this->forcedPaintMe();
+
+}
+
+/**
+ * @brief Paints the line to OpenGL context all the time
+ */
+void Line::forcedPaintMe() const
 {
     // Line is selected, paint blue line around
     if (this->selected)
@@ -445,12 +455,6 @@ void Line::rotate(Point centre_of_rotation, float angle)
     float dy1 = this->p1.getY() - centre_of_rotation.getY();
     float dx2 = this->p2.getX() - centre_of_rotation.getX();
     float dy2 = this->p2.getY() - centre_of_rotation.getY();
-
-//    this->p1.setLocation(this->p1.getX() + dx1*cosf(angle) - dy1*sinf(angle),
-//                         this->p1.getY() + dx1*sinf(angle) + dy1*cosf(angle));
-
-//    this->p2.setLocation(this->p2.getX() + dx2*cosf(angle) - dy2*sinf(angle),
-//                         this->p2.getY() + dx2*sinf(angle) + dy2*cosf(angle));
 
     this->p1.setLocation(cosf(angle) * (dx1) - sin(angle) * (dy1) + centre_of_rotation.getX(),
                          sinf(angle) * (dx1) + cos(angle) * (dy1) + centre_of_rotation.getY());

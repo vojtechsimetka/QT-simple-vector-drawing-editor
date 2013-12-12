@@ -21,11 +21,11 @@ SOURCES += main.cpp\
     data.cpp \
     metaelement.cpp \
     changeslog.cpp \
-    selectionrectangle.cpp \
     guideline.cpp \
     gui.cpp \
     rectangle.cpp \
-    font.cpp
+    font.cpp \
+    selection.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -35,11 +35,11 @@ HEADERS  += mainwindow.h \
     data.h \
     metaelement.h \
     changeslog.h \
-    selectionrectangle.h \
     guideline.h \
     gui.h \
     rectangle.h \
-    font.h
+    font.h \
+    selection.h
 
 FORMS    +=
 

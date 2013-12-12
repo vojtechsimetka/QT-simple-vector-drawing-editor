@@ -23,13 +23,7 @@ public:
     void paintMe() const;
     void paintPoints(float x, float y) const;
     void resize(float x1, float y1, float x2, float y2);
-    bool intersects(float, float, float, float) const;
-    bool intersects(Point) const;
     bool getCounterPoint(float, float, float *, float *, Qt::Corner *orientation) const;
-//    float getMinX() const;
-//    float getMinY() const;
-//    float getMaxX() const;
-//    float getMaxY() const;
 
     Point getP1() const;
     void setP1(const Point &value);

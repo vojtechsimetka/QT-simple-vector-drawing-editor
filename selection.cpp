@@ -8,13 +8,13 @@
  * @version 1
  * @file    selectionrectangle.cpp
  */
-#include "selectionrectangle.h"
+#include "selection.h"
 #include "changeslog.h"
 
 /**
  * @brief SelectionRectangle constructor
  */
-SelectionRectangle::SelectionRectangle(Gui *gui)
+Selection::Selection(Gui *gui)
     : min_x(0)
     , min_y(0)
     , max_x(0)
@@ -31,15 +31,15 @@ SelectionRectangle::SelectionRectangle(Gui *gui)
 /**
  * @brief Selection rectangle virtual destructor
  */
-SelectionRectangle::~SelectionRectangle()
+Selection::~Selection()
 {
     delete bounding_rectangle;
 }
 
 /**
- * @brief Paints slection rectangle
+ * @brief Paints selection rectangle
  */
-void SelectionRectangle::paintMe() const
+void Selection::paintMe() const
 {
     // Selection is not active
     if (this->active)
@@ -81,18 +81,11 @@ void SelectionRectangle::paintMe() const
 }
 
 /**
- * @brief Does not have any meaning, just required redefinishion...
- */
-void SelectionRectangle::paintPoints() const
-{
-}
-
-/**
  * @brief Paints bounding rectangle
- * @param x
- * @param y
+ * @param x Mouse position coordinate x
+ * @param y Mouse position coordinate y
  */
-void SelectionRectangle::paintBoundingRectangle(float x, float y) const
+void Selection::paintBoundingRectangle(float x, float y) const
 {
     if (this->valid_bounding_rectangle)
     {
@@ -103,34 +96,39 @@ void SelectionRectangle::paintBoundingRectangle(float x, float y) const
         glTranslatef(this->offset_x,
                      this->offset_y,
                      0);
+
+        // Paints rotation centre
         Point::paintPoint(this->centre_of_rotation, x, y);
         Point::paintPoint(this->centre_of_rotation.getX() + this->rotation_point.getX(),
                           this->centre_of_rotation.getY() + this->rotation_point.getY(),
                           x,
                           y);
 
+        // Moves scene to rotation centre
         glTranslatef(this->centre_of_rotation.getX(),
                      this->centre_of_rotation.getY(),
                      0);
+
+        // Rotates scene around z axis
         glRotatef(this->rotation,
                   0,
                   0,
                   1.0);
+
+        // Moves scene back where it was before rotation
         glTranslatef(-this->centre_of_rotation.getX(),
                      -this->centre_of_rotation.getY(),
                      0);
+
+        // Paints bounding rectangle
         this->bounding_rectangle->paintMe();
         this->bounding_rectangle->paintPoints(x,y);
-        glTranslatef(this->centre_of_rotation.getX(),
-                     this->centre_of_rotation.getY(),
-                     0);
 
-        glTranslatef(-this->centre_of_rotation.getX(),
-                     -this->centre_of_rotation.getY(),
-                     0);
+        // Paints all elemenets
         foreach (Element *e, this->selected_items)
-            e->paintMe();
+            e->forcedPaintMe();
 
+        // Restores matrix
         glPopMatrix();
     }
 }
@@ -141,8 +139,10 @@ void SelectionRectangle::paintBoundingRectangle(float x, float y) const
  * @param y1 Coordinate y of first point
  * @param x2 Coordinate x of second point
  * @param y2 Coordinate y of second point
+ * @param offset Model's offset
+ * @param scale Model's scale
  */
-void SelectionRectangle::resize(float x1, float y1, float x2, float y2, const Point offset, float scale)
+void Selection::resizeSelectionRectangle(float x1, float y1, float x2, float y2, const Point offset, float scale)
 {
     this->width = fabs(x1 - x2);
     this->height = fabs(y1 - y2);
@@ -157,15 +157,36 @@ void SelectionRectangle::resize(float x1, float y1, float x2, float y2, const Po
     this->transform(offset, scale);
 }
 
-void SelectionRectangle::resize(float x1, float y1, float x2, float y2, Qt::Corner orientation)
+/**
+ * @brief Resizes selected items to new bounding box
+ * @param ox Origin's coordinate x
+ * @param oy Origin's coordinate y
+ * @param x Coordinate x of extension
+ * @param y Coordinate y of extension
+ * @param orientation Orientation of the scale
+ */
+void Selection::resizeSelectedItems(float ox, float oy, float x, float y, Qt::Corner orientation)
 {
+    // Sets oriigin's location
+    this->origin.setLocation(ox, oy);
+
+    // Sets orientation of resize
     this->orientation = orientation;
-//    this->resize(x1,y1,x2,y2);
+
+    // Performs the resize
+    this->resizeSelectedItems(x, y);
 }
 
-void SelectionRectangle::resize(float x, float y)
+/**
+ * @brief Resizes selected items to new bounding box
+ * @param x Coordinate x of extension of the bounding box
+ * @param y Coordinate y of extension of the bounding box
+ */
+void Selection::resizeSelectedItems(float x, float y)
 {
     float scale_x, scale_y;
+
+    // Selection has degraded to vertical line
     if (this->minx == this->maxx)
     {
         scale_x = 0;
@@ -175,6 +196,8 @@ void SelectionRectangle::resize(float x, float y)
                                          this->origin.getX()
                                          ,y);
     }
+
+    // Selection has degraded to horizontal line
     else if (this->miny == this->maxy)
     {
         scale_x = (this->origin.getX() - x)/(this->maxx -this->minx);
@@ -184,6 +207,8 @@ void SelectionRectangle::resize(float x, float y)
                                          x,
                                          this->origin.getY());
     }
+
+    // Selection can be extended both vertically and horizontally
     else
     {
         scale_x = (this->origin.getX() - x)/(this->maxx -this->minx);
@@ -199,6 +224,7 @@ void SelectionRectangle::resize(float x, float y)
     float centre_x;
     float centre_y;
 
+    // Based on orientation determines how objects should be extended
     switch(this->orientation)
     {
     case Qt::TopLeftCorner:
@@ -206,6 +232,8 @@ void SelectionRectangle::resize(float x, float y)
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
             e = this->selected_items.at(i/4);
+
+            // Resizes one object from fixed point with coordinates maxx and maxy
             e->resizeToBoundingRectangle(this->maxx - this->list_of_points[i]   * scale_x,
                                          this->maxy - this->list_of_points[i+1] * scale_y,
                                          this->maxx - this->list_of_points[i+2] * scale_x,
@@ -220,6 +248,8 @@ void SelectionRectangle::resize(float x, float y)
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
             e = this->selected_items.at(i/4);
+
+            // Resizes one object from fixed point with coordinates minx and miny
             e->resizeToBoundingRectangle(this->minx - this->list_of_points[i]   * scale_x,
                                          this->miny - this->list_of_points[i+1] * scale_y,
                                          this->minx - this->list_of_points[i+2] * scale_x,
@@ -234,6 +264,8 @@ void SelectionRectangle::resize(float x, float y)
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
             e = this->selected_items.at(i/4);
+
+            // Resizes one object from fixed point with coordinates minx and maxy
             e->resizeToBoundingRectangle(this->minx - this->list_of_points[i]   * scale_x,
                                          this->maxy - this->list_of_points[i+1] * scale_y,
                                          this->minx - this->list_of_points[i+2] * scale_x,
@@ -249,6 +281,8 @@ void SelectionRectangle::resize(float x, float y)
         for (unsigned long int i = 0; i < this->selected_items.size()*4; i+=4)
         {
             e = this->selected_items.at(i/4);
+
+            // Resizes one object from fixed point with coordinates maxx and miny
             e->resizeToBoundingRectangle(this->maxx - this->list_of_points[i]   * scale_x,
                                          this->miny - this->list_of_points[i+1] * scale_y,
                                          this->maxx - this->list_of_points[i+2] * scale_x,
@@ -261,38 +295,40 @@ void SelectionRectangle::resize(float x, float y)
 
     }
 
+    // Sets resized location centre of rotation
     this->centre_of_rotation.setLocation(centre_x, centre_y);
 }
 
 /**
  * @brief Deactivates selection rectangle
  */
-void SelectionRectangle::deactivate()
+void Selection::deactivate()
 {
     this->active = false;
     this->calculateBoundingRectangle();
 
+    // Sets centre of ratation to the centre of bounding rectangle
     this->centre_of_rotation.setLocation(this->minx + (this->maxx - this->minx)/2,
                                          this->miny + (this->maxy - this->miny)/2);
 }
 
 /**
- * @brief Tests if rectangle intersects with point
+ * @brief Tests if selection rectangle intersects with point
  * @param point Point to intersect with
  * @return True if point and rectangle intersects
  */
-bool SelectionRectangle::selectionIntersects(Point point) const
+bool Selection::selectionIntersects(Point point) const
 {
     return this->selectionIntersects(point.getX(), point.getY());
 }
 
 /**
- * @brief Tests if rectangle intersects with point
+ * @brief Tests if selection rectangle intersects with point
  * @param x Point's coordinate x
  * @param y Point's coordinate y
  * @return True if point and rectangle intersects
  */
-bool SelectionRectangle::selectionIntersects(float x, float y) const
+bool Selection::selectionIntersects(float x, float y) const
 {
     return this->translated_min_x < x &&
            this->translated_max_x > x &&
@@ -301,11 +337,11 @@ bool SelectionRectangle::selectionIntersects(float x, float y) const
 }
 
 /**
- * @brief Transforms rectangle to match model's offset
+ * @brief Transforms rectangle to match model's offset and scale
  * @param offset Offset of the scene
  * @param scale Scale of the scene
  */
-void SelectionRectangle::transform(Point offset, float scale)
+void Selection::transform(Point offset, float scale)
 {
     this->translated_min_x = (this->min_x / scale) - offset.getX();
     this->translated_max_x = (this->max_x / scale) - offset.getX();
@@ -313,7 +349,12 @@ void SelectionRectangle::transform(Point offset, float scale)
     this->translated_max_y = (this->max_y / scale) - offset.getY();
 }
 
-bool SelectionRectangle::selectionIntersects(const Element *e) const
+/**
+ * @brief Tests if selection rectangle intersects with an element
+ * @param e Element to be tested for intersection
+ * @return True if rectangle and element intersects
+ */
+bool Selection::selectionIntersects(const Element *e) const
 {
     return e->intersects(this->translated_min_x,
                          this->translated_min_y,
@@ -321,45 +362,87 @@ bool SelectionRectangle::selectionIntersects(const Element *e) const
                          this->translated_max_y);
 }
 
-bool SelectionRectangle::isActive() const
+/**
+ * @brief Tests if selection rectangle is active
+ * @return True if selection rectangle is active
+ */
+bool Selection::isActive() const
 {
     return this->active;
 }
 
-bool SelectionRectangle::empty() const
+/**
+ * @brief Tests if there are any selected items
+ * @return True if there aren't any selected items
+ */
+bool Selection::empty() const
 {
     return this->selected_items.empty();
 }
 
-Element * SelectionRectangle::front() const
+/**
+ * @brief Returns first element from selected items
+ * @return First element from selected items
+ */
+Element * Selection::front() const
 {
     return this->selected_items.front();
 }
 
-std::vector<Element *> SelectionRectangle::getSelectedItems() const
+/**
+ * @brief Returns selected items
+ * @return Selected items
+ */
+std::vector<Element *> Selection::getSelectedItems() const
 {
     return this->selected_items;
 }
 
-void SelectionRectangle::clear()
+/**
+ * @brief Clears selected items
+ */
+void Selection::clear()
 {
+    // Deselects all items
     this->deselectAll();
     this->valid_bounding_rectangle = false;
+
+    // Clears selected items
     this->selected_items.clear();
+
+    // Disables delete button
     this->gui->setDelete(false);
 }
 
-void SelectionRectangle::addBack(Element *e)
+/**
+ * @brief Adds new item to the back of selected items
+ * @param e Item to be selected
+ */
+void Selection::addBack(Element *e)
 {
+    // Selects new item
     e->selectMe();
+
+    // Disables it for drawing
+    e->setVisible(false);
+
+    // Stores item to the selection
     this->selected_items.push_back(e);
+
+    // Enables delete button since there is something selected now.
     this->gui->setDelete(true);
 }
 
-void SelectionRectangle::deselectAll()
+/**
+ * @brief Deselects all items in selection and allows them to be drawn
+ */
+void Selection::deselectAll()
 {
     foreach (Element *e, this->selected_items)
+    {
         e->deSelectMe();
+        e->setVisible(true);
+    }
 }
 
 /**
@@ -367,7 +450,7 @@ void SelectionRectangle::deselectAll()
  * @param object Element to be found in selected items
  * @return True if element is found in selected items
  */
-bool SelectionRectangle::contains(Element *object) const
+bool Selection::contains(Element *object) const
 {
     foreach(Element* e, this->selected_items)
     {
@@ -378,15 +461,21 @@ bool SelectionRectangle::contains(Element *object) const
     return false;
 }
 
-void SelectionRectangle::calculateBoundingRectangle()
+/**
+ * @brief Calculates bounding rectangle
+ */
+void Selection::calculateBoundingRectangle()
 {
+    // There aren't any selected items, disables drawing of bounding rectangle
     if (this->selected_items.empty())
         this->valid_bounding_rectangle = false;
 
+    // There are some selected items
     else
     {
         this->valid_bounding_rectangle = true;
 
+        // Determines bounding rectangle size by calculating minimal and maximal coordinate
         Element *e = this->selected_items.front();
 
         this->minx = e->getMinX();
@@ -407,33 +496,46 @@ void SelectionRectangle::calculateBoundingRectangle()
             this->maxy = this->maxy > t_maxy ? this->maxy : t_maxy;
         }
 
+        // Resizes bounding rectangle
         this->bounding_rectangle->resize(this->minx,
                                          this->miny,
                                          this->maxx,
                                          this->maxy);
 
+        // Sets rotation point to be 24 px right to the centre of rotation
         this->rotation_point.setLocation(3 * OpenGLWidget::treshold_value, 0);
     }
 }
 
-bool SelectionRectangle::getCounterPointAndCalculatePoints(float x, float y, float *ox, float *oy)
+/**
+ * @brief If resizing corner was clicked, stores the opposite point and returns true
+ * @param x Mouse position coordinate x
+ * @param y Mouse position coordinate y
+ * @return True if some corner point was clicked
+ */
+bool Selection::isResizePointClicked(float x, float y)
 {
-    if (this->bounding_rectangle->getCounterPoint(x,y,ox,oy, &this->orientation))
-    {
-        this->list_of_points.clear();
+    float ox, oy;
 
-        this->storeDistancesToFixedPoint();
+    // Some corner point was clicked
+    if (this->bounding_rectangle->getCounterPoint(x,y,&ox,&oy, &this->orientation))
+    {
+        this->origin.setLocation(ox, oy);
 
         return true;
     }
     return false;
 }
 
-void SelectionRectangle::storeDistancesToFixedPoint()
+/**
+ * @brief Stores distances to fixed point for each element
+ */
+void Selection::storeDistancesToFixedPoint()
 {
+    // Clears distance list
     this->list_of_points.clear();
 
-
+    // Based on orientation stores distances betwenn element min and max coordinate and the fixed point
     switch(this->orientation)
     {
     case Qt::TopLeftCorner:
@@ -478,29 +580,49 @@ void SelectionRectangle::storeDistancesToFixedPoint()
     }
 }
 
-void SelectionRectangle::finalizeResize()
+/**
+ * @brief Finishes resize
+ */
+void Selection::finalizeResize()
 {
+    // Finishes resize on each element
     foreach (Element *e, this->selected_items)
         e->finalizeResize();
 
+    // Calculates bounding rectangle
     this->calculateBoundingRectangle();
 
+    // Sets resize flag to false
     this->resized = false;
 }
 
-void SelectionRectangle::startDragging(float x, float y)
+/**
+ * @brief Starts dragging selected elements
+ * @param x Origin point's coordinate x
+ * @param y Origin point's coordinate y
+ */
+void Selection::startDragging(float x, float y)
 {
     this->start_x = x;
     this->start_y = y;
     this->dragging_items = true;
 }
 
-bool SelectionRectangle::isDragged() const
+/**
+ * @brief Tests if selected elements are being dragged
+ * @return True if selected elements are being dragged
+ */
+bool Selection::isDragged() const
 {
     return this->dragging_items;
 }
 
-void SelectionRectangle::finishDragging(float x, float y)
+/**
+ * @brief Finishes dragging for all elements
+ * @param x Final coordinate x for the origin point
+ * @param y Final coordinate y for the origin point
+ */
+void Selection::finishDragging(float x, float y)
 {
     this->offset_x = 0;
     this->offset_y = 0;
@@ -510,34 +632,58 @@ void SelectionRectangle::finishDragging(float x, float y)
     float dx = x - this->start_x;
     float dy = y - this->start_y;
 
+    // Moves all elements by dx
     foreach (Element *e, this->selected_items)
         e->translatef(dx, dy);
 
     ChangesLog::sharedInstance()->doStep(MOVE, dx, dy, new std::vector<Element *>(this->selected_items));
 
+    // Recalculates bounding rectangle
     this->calculateBoundingRectangle();
 
+    // Moves centre of origin
     this->centre_of_rotation.setLocation(this->centre_of_rotation.getX() + dx,
                                          this->centre_of_rotation.getY() + dy);
 }
 
-void SelectionRectangle::drag(float x, float y)
+/**
+ * @brief Draggs items
+ * @param x Current coordinate x of mouse
+ * @param y Current coordinate y of mouse
+ */
+void Selection::drag(float x, float y)
 {
     this->offset_x = x - this->start_x;
     this->offset_y = y - this->start_y;
 }
 
-Qt::Corner SelectionRectangle::getOrientation()
+/**
+ * @brief Returns orrientation of resize
+ * @return Returns orrientation of resize
+ */
+Qt::Corner Selection::getOrientation()
 {
     return this->orientation;
 }
 
-bool SelectionRectangle::isCentreOfRotation(float x, float y)
+/**
+ * @brief Tests if point with coordinates x and y lies nearby centre of rotation
+ * @param x Coordinate x of mouse position in model coordinates
+ * @param y Coordinate y of mouse position in model coordinates
+ * @return True if point with coordinates x and y lies nearby centre of rotation
+ */
+bool Selection::isCentreOfRotation(float x, float y)
 {
     return this->centre_of_rotation.isNearby(x,y);
 }
 
-bool SelectionRectangle::isRotationPoint(float x, float y)
+/**
+ * @brief Tests if point with coordinates x and y lies nearby rotation point
+ * @param x Coordinate x of mouse position in model coordinates
+ * @param y Coordinate y of mouse position in model coordinates
+ * @return True if point with coordinates x and y lies nearby rotation point
+ */
+bool Selection::isRotationPoint(float x, float y)
 {
     return Point::isNearby(this->centre_of_rotation.getX() + this->rotation_point.getX(),
                            this->centre_of_rotation.getY() + this->rotation_point.getY(),
@@ -545,61 +691,112 @@ bool SelectionRectangle::isRotationPoint(float x, float y)
                            y);
 }
 
-bool SelectionRectangle::isCentreOfRotationDragged()
+/**
+ * @brief Tests if centre of rotation is being dragged
+ * @return True if centre of rotation is being dragged
+ */
+bool Selection::isCentreOfRotationDragged()
 {
     return this->centre_of_origin_dragged;
 }
 
-bool SelectionRectangle::isRotationPointDragged()
+/**
+ * @brief Tests if rotation point is being dragged
+ * @return True if rotation point is being dragged
+ */
+bool Selection::isRotationPointDragged()
 {
     return this->rotation_point_dragged;
 }
 
-void SelectionRectangle::dragCentreOfRotation(float x, float y)
+/**
+ * @brief Draggs centre of rotation
+ * @param x New coordinate x of centre of rotation
+ * @param y New coordinate y of centre of rotation
+ */
+void Selection::dragCentreOfRotation(float x, float y)
 {
     this->centre_of_rotation.setLocation(x,y);
 }
 
-void SelectionRectangle::dragRotationPoint(float x, float y)
+/**
+ * @brief Draggs rotation pooint
+ * @param x New coordinate x of rotation point
+ * @param y New coordinate y of rotation point
+ */
+void Selection::dragRotationPoint(float x, float y)
 {
     float dx = x - this->centre_of_rotation.getX();
     float dy = y - this->centre_of_rotation.getY();
+
     this->rotation_point.setLocation(dx, dy);
 
+    // Calculates rotation
     this->rotation = atanf(dy/dx) * 180 / 3.14;
+
+    // Normalizes the rotation
     if (dx < 0)
         this->rotation += 180;
 }
 
-void SelectionRectangle::setCentreOfRotationDragged(bool val)
+/**
+ * @brief Sets if centre of rotation is dragged
+ * @param val
+ */
+void Selection::setCentreOfRotationDragged(bool val)
 {
     this->centre_of_origin_dragged = val;
 }
 
-void SelectionRectangle::setRotationPointDragged(bool val)
+/**
+ * @brief Sets if rotation point is being dragged, if not rotates the scene
+ * @param val
+ */
+void Selection::setRotationPointDragged(bool val)
 {
     this->rotation_point_dragged = val;
 
     // Finished rotationg
     if (!this->rotation_point_dragged)
     {
-        float rot = this->rotation * 3.14/ 180;
+        this->rotate(this->centre_of_rotation, this->rotation * 3.14/ 180);
 
-        foreach (Element *e, this->selected_items)
-            e->rotate(this->centre_of_rotation, rot);
+        this->rotation = 0;
     }
-
-    this->rotation = 0;
-    this->calculateBoundingRectangle();
 }
 
-bool SelectionRectangle::isResized()
+/**
+ * @brief Tests if selected items are being resized
+ * @return True if selected items are being resized
+ */
+bool Selection::isResized()
 {
     return this->resized;
 }
 
-void SelectionRectangle::startResize(float x, float y)
+/**
+ * @brief Starts resizing
+ */
+void Selection::startResize()
 {
     this->resized = true;
-    this->origin.setLocation(x,y);
+
+    // Clears stored points
+    this->list_of_points.clear();
+
+    // Stores distance to the fixed point for each element
+    this->storeDistancesToFixedPoint();
+}
+
+/**
+ * @brief Rotates around point by some angle
+ * @param cor Centre of rotation
+ * @param angle How much should the object be rotated in radians
+ */
+void Selection::rotate(Point cor, float angle)
+{
+    foreach (Element *e, this->selected_items)
+        e->rotate(cor, angle);
+
+    this->calculateBoundingRectangle();
 }

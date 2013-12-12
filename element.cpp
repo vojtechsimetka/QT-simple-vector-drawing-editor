@@ -16,6 +16,7 @@
 Element::Element(ElementType::Type type)
     : highlighted(false)
     , selected(false)
+    , visible(true)
     , type(type)
 {
 
@@ -66,4 +67,9 @@ ElementType::Type Element::getType() const
 bool Element::isSelected() const
 {
     return this->selected;
+}
+
+void Element::setVisible(bool val)
+{
+    this->visible = val;
 }

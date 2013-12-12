@@ -132,16 +132,6 @@ void Rectangle::setP2(const Point &value)
     p2 = value;
 }
 
-bool Rectangle::intersects(float, float, float, float) const
-{
-    return false;
-}
-
-bool Rectangle::intersects(Point ) const
-{
-    return false;
-}
-
 
 bool Rectangle::getCounterPoint(float x, float y, float *ox, float *oy, Qt::Corner *orientation) const
 {
@@ -178,27 +168,4 @@ bool Rectangle::getCounterPoint(float x, float y, float *ox, float *oy, Qt::Corn
     }
 
     return false;
-}/*
-
-float Rectangle::getMinX() const
-{
-    return this->p1.getX() < this->p2.getX() ? this->getP1().getX() : this->p2.getX();
 }
-
-float Rectangle::getMinY() const
-{
-    return this->p1.getY() < this->p2.getY() ? this->getP1().getY() : this->p2.getY();
-}
-
-float Rectangle::getMaxX() const
-{
-    return this->p1.getX() > this->p2.getX() ? this->getP1().getX() : this->p2.getX();
-}
-
-float Rectangle::getMaxY() const
-{
-    return this->p1.getY() > this->p2.getY() ? this->getP1().getY() : this->p2.getY();
-}*/
-
-
-

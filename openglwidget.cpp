@@ -22,7 +22,7 @@ float OpenGLWidget::treshold_value = MINDISTANCE;
  */
 OpenGLWidget::OpenGLWidget(Gui *gui, QWidget *parent)
     : QGLWidget(parent)
-    , selection(new SelectionRectangle(gui))
+    , selection(new Selection(gui))
     , offset(0, 0)
     , aux_offset(0, 0)
     , mouse_start_position(0, 0)
@@ -584,7 +584,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 
         else if (this->selection->isResized())
         {
-            this->selection->resize(x, y);
+            this->selection->resizeSelectedItems(x, y);
         }
 
         // Some element is being modified, change its size
@@ -633,7 +633,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 
                     else
                     {
-                        this->selection->resize(this->mouse_start_position.getX(),
+                        this->selection->resizeSelectionRectangle(this->mouse_start_position.getX(),
                                                 this->mouse_start_position.getY(),
                                                 this->mouse_end_position.getX(),
                                                 this->mouse_end_position.getY(),
@@ -1261,7 +1261,7 @@ Element * OpenGLWidget::topObjectAtMousePosition()
     }
 
     // Checks all data
-    foreach(Element *e, this->selection->getSelectedItems())
+    foreach(Element *e, this->data->getElements())
     {
         if (e != NULL && e->intersects(x, y))
             return e;
@@ -1281,9 +1281,6 @@ void OpenGLWidget::mouseReleaseSelect()
     else if (this->selection->isRotationPointDragged())
     {
         this->selection->setRotationPointDragged(false);
-
-        foreach (Element *e, this->selection->getSelectedItems())
-            this->data->add(e);
     }
 
     else if  (this->selection->isActive())
@@ -1292,11 +1289,7 @@ void OpenGLWidget::mouseReleaseSelect()
         foreach (Element *e, this->data->getElements())
         {
             if (this->selection->selectionIntersects(e))
-            {
                 this->selection->addBack(e);
-            }
-            else
-                e->deSelectMe();
         }
 
         // Deactivates selection rectangle
@@ -1305,13 +1298,7 @@ void OpenGLWidget::mouseReleaseSelect()
 
     else if (this->selection->isResized())
     {
-        foreach (Element *e, this->selection->getSelectedItems())
-            this->data->add(e);
-
         this->selection->finalizeResize();
-
-//        this->metaElement.clear();
-//        this->selection->finalizeResize();
 
         // Dehighlight all elements
         this->data->deHighlightAll();
@@ -1320,21 +1307,6 @@ void OpenGLWidget::mouseReleaseSelect()
         this->vertical_guideline->invalidate();
         this->horizontal_guideline->invalidate();
     }
-//    else if (this->metaElement.getElement() == this->selection)
-//    {
-//        foreach (Element *e, this->selection->getSelectedItems())
-//            this->data->add(e);
-
-//        this->metaElement.clear();
-//        this->selection->finalizeResize();
-
-//        // Dehighlight all elements
-//        this->data->deHighlightAll();
-
-//        // Clear dotted lines
-//        this->vertical_guideline->invalidate();
-//        this->horizontal_guideline->invalidate();
-//    }
 
     else if (this->selection->isDragged())
     {
@@ -1349,8 +1321,6 @@ void OpenGLWidget::mouseReleaseSelect()
  */
 void OpenGLWidget::mousePressSelect()
 {
-    float origin_x;
-    float origin_y;
     float mouse_x_in_model = this->translateX(this->mouse_end_position.getX());
     float mouse_y_in_model = this->translateY(this->mouse_end_position.getY());
 
@@ -1363,34 +1333,13 @@ void OpenGLWidget::mousePressSelect()
     else if(this->selection->isRotationPoint(mouse_x_in_model, mouse_y_in_model))
     {
         this->selection->setRotationPointDragged(true);
-        foreach (Element *e, this->selection->getSelectedItems())
-            this->data->remove(e);
         return;
     }
 
-    else if (this->selection->getCounterPointAndCalculatePoints(mouse_x_in_model,
-                                                                mouse_y_in_model,
-                                                                &origin_x,
-                                                                &origin_y))
+    else if (this->selection->isResizePointClicked(mouse_x_in_model,
+                                                                       mouse_y_in_model))
     {
-        // Sets selection as an element being resized
-//        this->metaElement.set(this->selection, origin_x, origin_y);
-
-        this->selection->startResize(origin_x, origin_y);
-
-        // Removes elements from data structure
-        foreach (Element *e, this->selection->getSelectedItems())
-            this->data->remove(e);
-
-
-//        ChangesLog::sharedInstance()->doStep(RESIZE,
-//                                             new Point(origin_x, origin_y),
-//                                             new Point(this->translateX(this->mouse_end_position.getX()),
-//                                                       this->translateY(this->mouse_end_position.getY())),
-//                                             this->selection->getOrientation(),
-//                                             new std::vector<Element *>(this->selection->getSelectedItems())
-//                                             );
-
+        this->selection->startResize();
         return;
     }
 
@@ -1404,7 +1353,7 @@ void OpenGLWidget::mousePressSelect()
         this->selection->clear();
 
         // Starts displaying selection rectangle
-        this->selection->resize(this->mouse_start_position.getX(),
+        this->selection->resizeSelectionRectangle(this->mouse_start_position.getX(),
                                 this->mouse_start_position.getY(),
                                 this->mouse_end_position.getX(),
                                 this->mouse_end_position.getY(),
@@ -1415,8 +1364,8 @@ void OpenGLWidget::mousePressSelect()
     {
         // Selection contains object, move objects
         if (selection->contains(object))
-            this->selection->startDragging(this->translateX(this->mouse_start_position.getX()),
-                                           this->translateY(this->mouse_start_position.getY()));
+            this->selection->startDragging(mouse_x_in_model,
+                                           mouse_y_in_model);
 
         // Selection does not contains object under cursor,
         // deselect all objects and select the new one
@@ -1425,6 +1374,8 @@ void OpenGLWidget::mousePressSelect()
             this->selection->clear();
             this->selection->addBack(object);
             this->selection->deactivate();
+            this->selection->startDragging(mouse_x_in_model,
+                                           mouse_y_in_model);
         }
     }
 }

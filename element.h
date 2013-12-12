@@ -30,6 +30,7 @@ public:
     Element(ElementType::Type type);
     virtual ~Element();
     virtual void paintMe() const = 0;
+    virtual void forcedPaintMe() const = 0;
     virtual void paintPoints() const = 0;
     virtual void resize(float x1, float y1, float x2, float y2) = 0;
     virtual bool intersects(float min_x, float min_y, float max_x, float max_y) const = 0;
@@ -51,11 +52,12 @@ public:
     void deSelectMe();
     bool isSelected() const;
     ElementType::Type getType() const;
-    void setOffset(float, float);
+    void setVisible(bool);
 
 protected:
     bool highlighted;
     bool selected;
+    bool visible;
     const ElementType::Type type;
 };
 

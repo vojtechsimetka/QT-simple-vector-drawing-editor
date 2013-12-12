@@ -34,7 +34,7 @@ ChangesLog *ChangesLog::sharedInstance()
  * @brief Initializes changeslog
  * @param d Data reference
  */
-void ChangesLog::init(Data *d, SelectionRectangle *selection)
+void ChangesLog::init(Data *d, Selection *selection)
 {
     this->data = d;
     this->selection = selection;
@@ -134,11 +134,11 @@ void ChangesLog::undoStep()
         }
         this->selection->calculateBoundingRectangle();
         this->selection->storeDistancesToFixedPoint();
-        this->selection->resize(s->origin->getX(),
-                                s->origin->getY(),
-                                s->changed->getX(),
-                                s->changed->getY(),
-                                s->orientation);
+        this->selection->resizeSelectedItems(s->origin->getX(),
+                                             s->origin->getY(),
+                                             s->changed->getX(),
+                                             s->changed->getY(),
+                                             s->orientation);
         break;
     default:
         break;
