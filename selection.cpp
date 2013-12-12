@@ -461,6 +461,14 @@ bool Selection::contains(Element *object) const
     return false;
 }
 
+
+void Selection::remove(Element *e)
+{
+    this->selected_items.erase(std::remove(selected_items.begin(), selected_items.end(), e),
+                               selected_items.end());
+
+}
+
 /**
  * @brief Calculates bounding rectangle
  */
@@ -797,6 +805,8 @@ void Selection::rotate(Point cor, float angle)
 {
     foreach (Element *e, this->selected_items)
         e->rotate(cor, angle);
+
+    ChangesLog::sharedInstance()->doStep(ROTATION,new Point(cor.getX(), cor.getY()),angle,new std::vector<Element *>(this->selected_items));
 
     this->calculateBoundingRectangle();
 }

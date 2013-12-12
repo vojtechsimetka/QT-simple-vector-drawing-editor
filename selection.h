@@ -46,6 +46,7 @@ public:
     void clear();
     void addBack(Element *e);
     bool contains(Element *e) const;
+    void remove(Element *e);
 
     // Resizing
     void finalizeResize();

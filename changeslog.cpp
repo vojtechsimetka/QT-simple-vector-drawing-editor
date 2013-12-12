@@ -93,6 +93,31 @@ void ChangesLog::doStep(Actions a, Point *origin, Point *changed, Qt::Corner ori
 }
 
 /**
+ * @brief Log one step
+ * @param a Action to log
+ * @param cor Centre of rotation
+ * @param angle How much should the object be rotated in radians
+ * @param object Object ID
+ */
+void ChangesLog::doStep(Actions a, Point *cor, float angle, void *object)
+{
+    // Remove all possible redo
+    while ((int)changes.size() != lastChange)
+        changes.pop_back();
+
+    // Create new step
+    Step *s = new Step();
+    s->action = a;
+    s->cor = cor;
+    s->angle = angle;
+    s->object = object;
+
+    // Add step to list of changes
+    changes.push_back(s);
+    lastChange++;
+}
+
+/**
  * @brief Undo step
  */
 void ChangesLog::undoStep()
@@ -111,7 +136,9 @@ void ChangesLog::undoStep()
     switch (s->action)
     {
     case ADD:
+        this->selection->remove((Element*)s->object);
         data->remove((Element*)s->object);
+        this->selection->calculateBoundingRectangle();
         break;
     case DELETE:
         list = (std::vector<Element *> *) s->object;
@@ -126,9 +153,15 @@ void ChangesLog::undoStep()
         }
         this->selection->calculateBoundingRectangle();
         break;
+    case ROTATION:
+        list = (std::vector<Element *> *) s->object;
+        foreach (Element *e, *list) {
+            e->rotate(*s->cor,-s->angle);
+        }
+        this->selection->calculateBoundingRectangle();
+        break;
     case RESIZE:
         list = (std::vector<Element *> *) s->object;
-        //this->selection->deselectAll();
         foreach (Element *e, *list) {
             this->selection->addBack(e);
         }
@@ -170,6 +203,8 @@ void ChangesLog::redoStep()
     {
     case ADD:
         data->add((Element*)s->object);
+        this->selection->addBack((Element*)s->object);
+        this->selection->calculateBoundingRectangle();
         break;
     case DELETE:
         list = (std::vector<Element *> *) s->object;
@@ -181,6 +216,13 @@ void ChangesLog::redoStep()
         list = (std::vector<Element *> *) s->object;
         foreach (Element *e, *list) {
             e->translatef(s->offsetX, s->offsetY);
+        }
+        this->selection->calculateBoundingRectangle();
+        break;
+    case ROTATION:
+        list = (std::vector<Element *> *) s->object;
+        foreach (Element *e, *list) {
+            e->rotate(*s->cor,s->angle);
         }
         this->selection->calculateBoundingRectangle();
         break;

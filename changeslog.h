@@ -21,6 +21,7 @@ enum Actions
     ADD,
     DELETE,
     MOVE,
+    ROTATION,
     RESIZE
 };
 
@@ -32,6 +33,8 @@ struct Step
     int offsetY;
     Point *origin;
     Point *changed;
+    Point *cor;
+    float angle;
     Qt::Corner orientation;
     void *object;
 };
@@ -52,6 +55,7 @@ public:
     void init(Data *d, Selection *selection);
     void doStep(Actions a, int offsetX, int offsetY, void *object);
     void doStep(Actions a, Point *min, Point *max, Qt::Corner orientation, void *object);
+    void doStep(Actions a, Point *cor, float angle, void *object);
     void undoStep();
     bool canUndo();
     void redoStep();

@@ -1336,7 +1336,7 @@ void OpenGLWidget::mousePressSelect()
         return;
     }
 
-    else if (this->selection->isResizePointClicked(mouse_x_in_model,
+     if (this->selection->isResizePointClicked(mouse_x_in_model,
                                                                        mouse_y_in_model))
     {
         this->selection->startResize();
