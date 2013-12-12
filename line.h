@@ -40,6 +40,7 @@ public:
     float getMaxY() const;
     void finalizeResize();
     void translatef(float, float);
+    void rotate(Point, float);
 
     Point getP1() const;
     void setP1(float x, float y);

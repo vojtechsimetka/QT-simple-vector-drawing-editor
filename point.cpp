@@ -111,11 +111,16 @@ void Point::paintPoint(float x, float y)
  */
 void Point::paintPoint(Point p, float x, float y)
 {
+    Point::paintPoint(p.getX(), p.getY(), x, y);
+}
+
+void Point::paintPoint(float px, float py, float x, float y)
+{
     // Enables and sets blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (isNearby(p.getX(), p.getY(), x, y))
+    if (isNearby(px, py, x, y))
     {
         // Sets size
         glPointSize(2*MINDISTANCE);
@@ -134,7 +139,7 @@ void Point::paintPoint(Point p, float x, float y)
 
     // Draws primitive
     glBegin(GL_POINTS);
-    glVertex2f(p.getX(), p.getY());
+    glVertex2f(px, py);
     glEnd();
 
     // Disables blending
@@ -154,6 +159,11 @@ float Point::distance(float x1, float y1, float x2, float y2)
     float dx = x1 - x2;
     float dy = y1 - y2;
     return sqrt((dx*dx) + (dy*dy));
+}
+
+bool Point::isNearby(float x, float y)
+{
+    return Point::distance(this->x, this->y, x, y) < OpenGLWidget::treshold_value;
 }
 
 bool Point::isNearby(float x1, float y1, float x2, float y2)

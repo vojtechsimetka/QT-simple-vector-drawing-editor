@@ -90,7 +90,7 @@ void Font::render(const char* c, float x, float y)
     glMatrixMode(GL_MODELVIEW);
 
     // Draw all characters
-    for(int i = 0; i < strlen(c); ++i)
+    for(unsigned long i = 0; i < strlen(c); ++i)
     {
       int idx = c[i] - ' ';
       if(idx < 0 || idx >= 96) throw std::runtime_error("Non-printable character encountered");

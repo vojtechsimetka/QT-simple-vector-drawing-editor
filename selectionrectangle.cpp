@@ -15,8 +15,7 @@
  * @brief SelectionRectangle constructor
  */
 SelectionRectangle::SelectionRectangle(Gui *gui)
-    : Element(ElementType::SELECTION_RECTANGLE)
-    , min_x(0)
+    : min_x(0)
     , min_y(0)
     , max_x(0)
     , max_y(0)
@@ -104,10 +103,31 @@ void SelectionRectangle::paintBoundingRectangle(float x, float y) const
         glTranslatef(this->offset_x,
                      this->offset_y,
                      0);
+        Point::paintPoint(this->centre_of_rotation, x, y);
+        Point::paintPoint(this->centre_of_rotation.getX() + this->rotation_point.getX(),
+                          this->centre_of_rotation.getY() + this->rotation_point.getY(),
+                          x,
+                          y);
 
+        glTranslatef(this->centre_of_rotation.getX(),
+                     this->centre_of_rotation.getY(),
+                     0);
+        glRotatef(this->rotation,
+                  0,
+                  0,
+                  1.0);
+        glTranslatef(-this->centre_of_rotation.getX(),
+                     -this->centre_of_rotation.getY(),
+                     0);
         this->bounding_rectangle->paintMe();
         this->bounding_rectangle->paintPoints(x,y);
+        glTranslatef(this->centre_of_rotation.getX(),
+                     this->centre_of_rotation.getY(),
+                     0);
 
+        glTranslatef(-this->centre_of_rotation.getX(),
+                     -this->centre_of_rotation.getY(),
+                     0);
         foreach (Element *e, this->selected_items)
             e->paintMe();
 
@@ -140,31 +160,44 @@ void SelectionRectangle::resize(float x1, float y1, float x2, float y2, const Po
 void SelectionRectangle::resize(float x1, float y1, float x2, float y2, Qt::Corner orientation)
 {
     this->orientation = orientation;
-    this->resize(x1,y1,x2,y2);
+//    this->resize(x1,y1,x2,y2);
 }
 
-void SelectionRectangle::resize(float ox, float oy, float x, float y)
+void SelectionRectangle::resize(float x, float y)
 {
     float scale_x, scale_y;
     if (this->minx == this->maxx)
     {
         scale_x = 0;
-        scale_y = (oy - y)/(this->maxy -this->miny);
-        this->bounding_rectangle->resize(ox,oy,ox,y);
+        scale_y = (this->origin.getY() - y)/(this->maxy -this->miny);
+        this->bounding_rectangle->resize(this->origin.getX(),
+                                         this->origin.getY(),
+                                         this->origin.getX()
+                                         ,y);
     }
     else if (this->miny == this->maxy)
     {
-        scale_x = (ox - x)/(this->maxx -this->minx);
+        scale_x = (this->origin.getX() - x)/(this->maxx -this->minx);
         scale_y = 0;
-        this->bounding_rectangle->resize(ox,oy,x,oy);
+        this->bounding_rectangle->resize(this->origin.getX(),
+                                         this->origin.getY(),
+                                         x,
+                                         this->origin.getY());
     }
     else
     {
-        scale_x = (ox - x)/(this->maxx -this->minx);
-        scale_y = (oy - y)/(this->maxy -this->miny);
-        this->bounding_rectangle->resize(ox,oy,x,y);
+        scale_x = (this->origin.getX() - x)/(this->maxx -this->minx);
+        scale_y = (this->origin.getY() - y)/(this->maxy -this->miny);
+        this->bounding_rectangle->resize(this->origin.getX(),
+                                         this->origin.getY(),
+                                         x,
+                                         y);
     }
+
     Element *e = NULL;
+
+    float centre_x;
+    float centre_y;
 
     switch(this->orientation)
     {
@@ -178,6 +211,9 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
                                          this->maxx - this->list_of_points[i+2] * scale_x,
                                          this->maxy - this->list_of_points[i+3] * scale_y);
         }
+
+        centre_x = x + (this->origin.getX() - x)/2;
+        centre_y = y + (this->origin.getY() - y)/2;
         break;
 
     case Qt::BottomRightCorner:
@@ -189,6 +225,9 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
                                          this->minx - this->list_of_points[i+2] * scale_x,
                                          this->miny - this->list_of_points[i+3] * scale_y);
         }
+
+        centre_x = this->origin.getX() + (x - this->origin.getX())/2;
+        centre_y = this->origin.getY() + (y - this->origin.getY())/2;
         break;
 
     case Qt::TopRightCorner:
@@ -200,6 +239,9 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
                                          this->minx - this->list_of_points[i+2] * scale_x,
                                          this->maxy - this->list_of_points[i+3] * scale_y);
         }
+
+        centre_x = this->origin.getX() + (x - this->origin.getX())/2;
+        centre_y = y + (this->origin.getY() - y)/2;
         break;
 
     case Qt::BottomLeftCorner:
@@ -212,9 +254,14 @@ void SelectionRectangle::resize(float ox, float oy, float x, float y)
                                          this->maxx - this->list_of_points[i+2] * scale_x,
                                          this->miny - this->list_of_points[i+3] * scale_y);
         }
+
+        centre_x = x + (this->origin.getX() - x)/2;
+        centre_y = this->origin.getY() + (y - this->origin.getY())/2;
         break;
 
     }
+
+    this->centre_of_rotation.setLocation(centre_x, centre_y);
 }
 
 /**
@@ -224,6 +271,9 @@ void SelectionRectangle::deactivate()
 {
     this->active = false;
     this->calculateBoundingRectangle();
+
+    this->centre_of_rotation.setLocation(this->minx + (this->maxx - this->minx)/2,
+                                         this->miny + (this->maxy - this->miny)/2);
 }
 
 /**
@@ -361,28 +411,9 @@ void SelectionRectangle::calculateBoundingRectangle()
                                          this->miny,
                                          this->maxx,
                                          this->maxy);
-    }
-}
 
-bool SelectionRectangle::intersects(float, float, float, float) const
-{
-    throw QString("The function intersects in Selection shouldn't be ever used");
-    return false;
-}
-bool SelectionRectangle::intersects(Point) const
-{
-    throw QString("The function intersects in Selection shouldn't be ever used");
-    return false;
-}
-bool SelectionRectangle::intersects(float, float) const
-{
-    throw QString("The function intersects in Selection shouldn't be ever used");
-    return false;
-}
-bool SelectionRectangle::getCounterPoint(float, float, float *, float *) const
-{
-    throw QString("The function getCounterPoint in Selection shouldn't be ever used");
-    return false;
+        this->rotation_point.setLocation(3 * OpenGLWidget::treshold_value, 0);
+    }
 }
 
 bool SelectionRectangle::getCounterPointAndCalculatePoints(float x, float y, float *ox, float *oy)
@@ -391,49 +422,7 @@ bool SelectionRectangle::getCounterPointAndCalculatePoints(float x, float y, flo
     {
         this->list_of_points.clear();
 
-
-        switch(this->orientation)
-        {
-        case Qt::TopLeftCorner:
-            foreach (Element *e, this->selected_items)
-            {
-                this->list_of_points.push_back(this->maxx - e->getMinX());
-                this->list_of_points.push_back(this->maxy - e->getMinY());
-                this->list_of_points.push_back(this->maxx - e->getMaxX());
-                this->list_of_points.push_back(this->maxy - e->getMaxY());
-            }
-            break;
-
-        case Qt::BottomRightCorner:
-            foreach (Element *e, this->selected_items)
-            {
-                this->list_of_points.push_back(e->getMinX() - this->minx);
-                this->list_of_points.push_back(e->getMinY() - this->miny);
-                this->list_of_points.push_back(e->getMaxX() - this->minx);
-                this->list_of_points.push_back(e->getMaxY() - this->miny);
-            }
-            break;
-
-        case Qt::TopRightCorner:
-            foreach (Element *e, this->selected_items)
-            {
-                this->list_of_points.push_back(e->getMinX() - this->minx);
-                this->list_of_points.push_back(this->maxy - e->getMinY());
-                this->list_of_points.push_back(e->getMaxX() - this->minx);
-                this->list_of_points.push_back(this->maxy - e->getMaxY());
-            }
-            break;
-
-        case Qt::BottomLeftCorner:
-            foreach (Element *e, this->selected_items)
-            {
-                this->list_of_points.push_back(this->maxx - e->getMinX());
-                this->list_of_points.push_back(e->getMinY() - this->miny);
-                this->list_of_points.push_back(this->maxx - e->getMaxX());
-                this->list_of_points.push_back(e->getMaxY() - this->miny);
-            }
-            break;
-        }
+        this->storeDistancesToFixedPoint();
 
         return true;
     }
@@ -489,33 +478,14 @@ void SelectionRectangle::storeDistancesToFixedPoint()
     }
 }
 
-float SelectionRectangle::getMinX() const
-{
-
-}
-float SelectionRectangle::getMinY() const
-{
-
-}
-float SelectionRectangle::getMaxX() const
-{
-
-}
-float SelectionRectangle::getMaxY() const
-{
-
-}
-void SelectionRectangle::resizeToBoundingRectangle(float, float, float, float)
-{
-
-}
-
 void SelectionRectangle::finalizeResize()
 {
     foreach (Element *e, this->selected_items)
         e->finalizeResize();
 
     this->calculateBoundingRectangle();
+
+    this->resized = false;
 }
 
 void SelectionRectangle::startDragging(float x, float y)
@@ -537,12 +507,18 @@ void SelectionRectangle::finishDragging(float x, float y)
 
     this->dragging_items = false;
 
-    foreach (Element *e, this->selected_items)
-        e->translatef(x - this->start_x, y - this->start_y);
+    float dx = x - this->start_x;
+    float dy = y - this->start_y;
 
-    ChangesLog::sharedInstance()->doStep(MOVE, x - this->start_x, y - this->start_y, new std::vector<Element *>(this->selected_items));
+    foreach (Element *e, this->selected_items)
+        e->translatef(dx, dy);
+
+    ChangesLog::sharedInstance()->doStep(MOVE, dx, dy, new std::vector<Element *>(this->selected_items));
 
     this->calculateBoundingRectangle();
+
+    this->centre_of_rotation.setLocation(this->centre_of_rotation.getX() + dx,
+                                         this->centre_of_rotation.getY() + dy);
 }
 
 void SelectionRectangle::drag(float x, float y)
@@ -556,7 +532,74 @@ Qt::Corner SelectionRectangle::getOrientation()
     return this->orientation;
 }
 
-void SelectionRectangle::translatef(float, float)
+bool SelectionRectangle::isCentreOfRotation(float x, float y)
 {
+    return this->centre_of_rotation.isNearby(x,y);
+}
 
+bool SelectionRectangle::isRotationPoint(float x, float y)
+{
+    return Point::isNearby(this->centre_of_rotation.getX() + this->rotation_point.getX(),
+                           this->centre_of_rotation.getY() + this->rotation_point.getY(),
+                           x,
+                           y);
+}
+
+bool SelectionRectangle::isCentreOfRotationDragged()
+{
+    return this->centre_of_origin_dragged;
+}
+
+bool SelectionRectangle::isRotationPointDragged()
+{
+    return this->rotation_point_dragged;
+}
+
+void SelectionRectangle::dragCentreOfRotation(float x, float y)
+{
+    this->centre_of_rotation.setLocation(x,y);
+}
+
+void SelectionRectangle::dragRotationPoint(float x, float y)
+{
+    float dx = x - this->centre_of_rotation.getX();
+    float dy = y - this->centre_of_rotation.getY();
+    this->rotation_point.setLocation(dx, dy);
+
+    this->rotation = atanf(dy/dx) * 180 / 3.14;
+    if (dx < 0)
+        this->rotation += 180;
+}
+
+void SelectionRectangle::setCentreOfRotationDragged(bool val)
+{
+    this->centre_of_origin_dragged = val;
+}
+
+void SelectionRectangle::setRotationPointDragged(bool val)
+{
+    this->rotation_point_dragged = val;
+
+    // Finished rotationg
+    if (!this->rotation_point_dragged)
+    {
+        float rot = this->rotation * 3.14/ 180;
+
+        foreach (Element *e, this->selected_items)
+            e->rotate(this->centre_of_rotation, rot);
+    }
+
+    this->rotation = 0;
+    this->calculateBoundingRectangle();
+}
+
+bool SelectionRectangle::isResized()
+{
+    return this->resized;
+}
+
+void SelectionRectangle::startResize(float x, float y)
+{
+    this->resized = true;
+    this->origin.setLocation(x,y);
 }

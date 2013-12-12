@@ -43,6 +43,8 @@ public:
     virtual void  resizeToBoundingRectangle(float, float, float, float) = 0;
     virtual void finalizeResize() = 0;
     virtual void translatef(float, float) = 0;
+    virtual void rotate(Point, float) = 0;
+
     void highlightMe();
     void deHighlightMe();
     void selectMe();

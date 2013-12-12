@@ -438,3 +438,23 @@ void Line::translatef(float x, float y)
     this->p1.setLocation(this->p1.getX() + x, this->p1.getY() + y);
     this->p2.setLocation(this->p2.getX() + x, this->p2.getY() + y);
 }
+
+void Line::rotate(Point centre_of_rotation, float angle)
+{
+    float dx1 = this->p1.getX() - centre_of_rotation.getX();
+    float dy1 = this->p1.getY() - centre_of_rotation.getY();
+    float dx2 = this->p2.getX() - centre_of_rotation.getX();
+    float dy2 = this->p2.getY() - centre_of_rotation.getY();
+
+//    this->p1.setLocation(this->p1.getX() + dx1*cosf(angle) - dy1*sinf(angle),
+//                         this->p1.getY() + dx1*sinf(angle) + dy1*cosf(angle));
+
+//    this->p2.setLocation(this->p2.getX() + dx2*cosf(angle) - dy2*sinf(angle),
+//                         this->p2.getY() + dx2*sinf(angle) + dy2*cosf(angle));
+
+    this->p1.setLocation(cosf(angle) * (dx1) - sin(angle) * (dy1) + centre_of_rotation.getX(),
+                         sinf(angle) * (dx1) + cos(angle) * (dy1) + centre_of_rotation.getY());
+
+    this->p2.setLocation(cosf(angle) * (dx2) - sin(angle) * (dy2) + centre_of_rotation.getX(),
+                         sinf(angle) * (dx2) + cos(angle) * (dy2) + centre_of_rotation.getY());
+}

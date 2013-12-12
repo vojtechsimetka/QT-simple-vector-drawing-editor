@@ -23,25 +23,14 @@ class Element;
 class Gui;
 class Rectangle;
 
-class SelectionRectangle : public Element
+class SelectionRectangle
 {
 public:
     SelectionRectangle(Gui * gui);
     ~SelectionRectangle();
     void paintMe() const;
     void paintPoints() const;
-    void resize(float x1, float y1, float x2, float y2);
     void resize(float x1, float y1, float x2, float y2, Qt::Corner orientation);
-    bool intersects(float min_x, float min_y, float max_x, float max_y) const;
-    bool intersects(Point) const;
-    bool intersects(float, float) const;
-    bool getCounterPoint(float, float, float*, float*) const;
-    float getMinX() const;
-    float getMinY() const;
-    float getMaxX() const;
-    float getMaxY() const;
-    void  resizeToBoundingRectangle(float, float, float, float);
-    void translatef(float, float);
 
     void paintBoundingRectangle(float, float) const;
     void resize(float, float, float, float, const Point offset, float scale);
@@ -59,15 +48,30 @@ public:
     void clear();
     void addBack(Element *e);
     bool contains(Element *e) const;
-    void finalizeResize();
 
+    // Resizing
+    void finalizeResize();
+    void startResize(float, float);
+    bool isResized();
+    void resize(float x2, float y2);
+    void calculateBoundingRectangle();
+    void storeDistancesToFixedPoint();
+
+    // Dragging
     void startDragging(float x, float y);
     bool isDragged() const;
     void finishDragging(float, float);
     void drag(float, float);
 
-    void calculateBoundingRectangle();
-    void storeDistancesToFixedPoint();
+    // ROtation
+    bool isCentreOfRotation(float, float);
+    bool isRotationPoint(float, float);
+    bool isCentreOfRotationDragged();
+    bool isRotationPointDragged();
+    void dragCentreOfRotation(float, float);
+    void dragRotationPoint(float, float);
+    void setCentreOfRotationDragged(bool);
+    void setRotationPointDragged(bool);
 
     Qt::Corner getOrientation();
 
@@ -98,12 +102,20 @@ private:
     float miny;
     float maxx;
     float maxy;
+    bool resized;
+    Point origin;
 
     bool dragging_items;
     float start_x;
     float start_y;
     float offset_x;
     float offset_y;
+
+    Point centre_of_rotation;
+    Point rotation_point;
+    bool centre_of_origin_dragged;
+    bool rotation_point_dragged;
+    float rotation;
 };
 
 #endif // SELECTIONRECTANGLE_H

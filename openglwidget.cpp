@@ -22,12 +22,12 @@ float OpenGLWidget::treshold_value = MINDISTANCE;
  */
 OpenGLWidget::OpenGLWidget(Gui *gui, QWidget *parent)
     : QGLWidget(parent)
+    , selection(new SelectionRectangle(gui))
     , offset(0, 0)
     , aux_offset(0, 0)
     , mouse_start_position(0, 0)
     , mouse_end_position(0, 0)
     , scale(1)
-    , selection(new SelectionRectangle(gui))
     , gui(gui)
 {
     // Initializes status
@@ -576,16 +576,23 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
     // Left button
     else
     {
+        if (this->selection->isCentreOfRotationDragged())
+            this->selection->dragCentreOfRotation(x,y);
+
+        else if (this->selection->isRotationPointDragged())
+            this->selection->dragRotationPoint(x,y);
+
+        else if (this->selection->isResized())
+        {
+            this->selection->resize(x, y);
+        }
+
         // Some element is being modified, change its size
-        if (!this->metaElement.isEmpty())
+        else if (!this->metaElement.isEmpty())
         {
             switch (this->status)
             {
             case DRAW:
-                this->mouseMoveDraw(&x, &y);
-                break;
-
-            case SELECT_E:
                 this->mouseMoveDraw(&x, &y);
                 break;
 
@@ -627,11 +634,11 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
                     else
                     {
                         this->selection->resize(this->mouse_start_position.getX(),
-                                               this->mouse_start_position.getY(),
-                                               this->mouse_end_position.getX(),
-                                               this->mouse_end_position.getY(),
-                                               this->offset,
-                                               this->scale);
+                                                this->mouse_start_position.getY(),
+                                                this->mouse_end_position.getX(),
+                                                this->mouse_end_position.getY(),
+                                                this->offset,
+                                                this->scale);
 
                         // Select or deselect element
                         foreach (Element *e, this->data->getElements())
@@ -1268,7 +1275,18 @@ Element * OpenGLWidget::topObjectAtMousePosition()
  */
 void OpenGLWidget::mouseReleaseSelect()
 {
-    if  (this->selection->isActive())
+    if (this->selection->isCentreOfRotationDragged())
+        this->selection->setCentreOfRotationDragged(false);
+
+    else if (this->selection->isRotationPointDragged())
+    {
+        this->selection->setRotationPointDragged(false);
+
+        foreach (Element *e, this->selection->getSelectedItems())
+            this->data->add(e);
+    }
+
+    else if  (this->selection->isActive())
     {
         // Selects all elements within selection rectangle
         foreach (Element *e, this->data->getElements())
@@ -1285,12 +1303,15 @@ void OpenGLWidget::mouseReleaseSelect()
         this->selection->deactivate();
     }
 
-    else if (this->metaElement.getElement() == this->selection)
+    else if (this->selection->isResized())
     {
         foreach (Element *e, this->selection->getSelectedItems())
             this->data->add(e);
-        this->metaElement.clear();
+
         this->selection->finalizeResize();
+
+//        this->metaElement.clear();
+//        this->selection->finalizeResize();
 
         // Dehighlight all elements
         this->data->deHighlightAll();
@@ -1299,6 +1320,21 @@ void OpenGLWidget::mouseReleaseSelect()
         this->vertical_guideline->invalidate();
         this->horizontal_guideline->invalidate();
     }
+//    else if (this->metaElement.getElement() == this->selection)
+//    {
+//        foreach (Element *e, this->selection->getSelectedItems())
+//            this->data->add(e);
+
+//        this->metaElement.clear();
+//        this->selection->finalizeResize();
+
+//        // Dehighlight all elements
+//        this->data->deHighlightAll();
+
+//        // Clear dotted lines
+//        this->vertical_guideline->invalidate();
+//        this->horizontal_guideline->invalidate();
+//    }
 
     else if (this->selection->isDragged())
     {
@@ -1315,14 +1351,32 @@ void OpenGLWidget::mousePressSelect()
 {
     float origin_x;
     float origin_y;
+    float mouse_x_in_model = this->translateX(this->mouse_end_position.getX());
+    float mouse_y_in_model = this->translateY(this->mouse_end_position.getY());
 
-    if (this->selection->getCounterPointAndCalculatePoints(this->translateX(this->mouse_end_position.getX()),
-                                                           this->translateY(this->mouse_end_position.getY()),
-                                                           &origin_x,
-                                                           &origin_y))
+    if (this->selection->isCentreOfRotation(mouse_x_in_model, mouse_y_in_model))
+    {
+        this->selection->setCentreOfRotationDragged(true);
+        return;
+    }
+
+    else if(this->selection->isRotationPoint(mouse_x_in_model, mouse_y_in_model))
+    {
+        this->selection->setRotationPointDragged(true);
+        foreach (Element *e, this->selection->getSelectedItems())
+            this->data->remove(e);
+        return;
+    }
+
+    else if (this->selection->getCounterPointAndCalculatePoints(mouse_x_in_model,
+                                                                mouse_y_in_model,
+                                                                &origin_x,
+                                                                &origin_y))
     {
         // Sets selection as an element being resized
-        this->metaElement.set(this->selection, origin_x, origin_y);
+//        this->metaElement.set(this->selection, origin_x, origin_y);
+
+        this->selection->startResize(origin_x, origin_y);
 
         // Removes elements from data structure
         foreach (Element *e, this->selection->getSelectedItems())
@@ -1431,7 +1485,7 @@ void OpenGLWidget::mouseMoveDraw(float *x, float *y)
         case MIDDLE:
             catchToMiddleOfLine(x1,y1,x,y);
             break;
-        case FIXEDLENGTH:
+        default:
             break;
         }
 
