@@ -41,17 +41,20 @@ void Gui::createActions(QMainWindow *MainWindow)
     this->action_undo->setText("Undo");
     this->action_undo->setIcon(QIcon(":/icons/images/undo.png"));
     this->action_undo->setEnabled(false);
+	this->action_undo->setShortcut(tr("Ctrl+Z"));
 
     // Redo action
     this->action_redo = new QAction(MainWindow);
     this->action_redo->setText("Redo");
     this->action_redo->setIcon(QIcon(":/icons/images/redo.png"));
     this->action_redo->setEnabled(false);
+	this->action_redo->setShortcut(tr("Ctrl+Shift+Z"));
 
     // Select action
     this->action_select = new QAction(MainWindow);
     this->action_select->setText("Select");
     this->action_select->setIcon(QIcon(":/icons/images/left_ptr.png"));
+	this->action_select->setShortcut(tr("Ctrl+Shift+S"));
 
 //    // Rotate action
 //    this->action_rotate = new QAction(MainWindow);
@@ -62,12 +65,14 @@ void Gui::createActions(QMainWindow *MainWindow)
     this->action_line = new QAction(MainWindow);
     this->action_line->setText("Line");
     this->action_line->setIcon(QIcon(":/icons/images/line.png"));
+	this->action_line->setShortcut(tr("Ctrl+L"));
 
     // Delete action
     this->action_delete = new QAction(MainWindow);
     this->action_delete->setText("Delete");
     this->action_delete->setIcon(QIcon(":/icons/images/delete.png"));
     this->action_delete->setEnabled(false);
+	this->action_delete->setShortcut(tr("Ctrl+D"));
 
     // Pan action
     this->action_pan = new QAction(MainWindow);
